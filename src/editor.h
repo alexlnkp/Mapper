@@ -16,4 +16,10 @@ typedef enum CameraState {
     WantsToPan
 } CameraState;
 
+typedef struct {
+    Vector3 pos;
+    Vector3 dim;
+    Color col;
+} Cube;
+
 #endif /* EDITOR_H */

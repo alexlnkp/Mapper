@@ -13,11 +13,14 @@
 Camera* cam;
 CameraState cam_state;
 float cam_speed;
+Cube cubes[1024];
+unsigned _n_cubes;
 /* ---------------- */
 
 inline float vFov_from_hFov(float hFov, float aspect) {
     return (2.0f * atan(tan((hFov * DEG2RAD) / 2.0f) / aspect)) * RAD2DEG;
 }
+
 
 void CameraInit() {
     *cam = (Camera){0};
@@ -34,6 +37,19 @@ void CameraInit() {
 void InitGlobal() {
     MALLOC(cam, sizeof(Camera));
     CameraInit();
+
+    _n_cubes = 0;
+
+    for (unsigned i = 0; i < sizeof(cubes) / sizeof(cubes[0]); ++i) {
+        cubes[i] = (Cube){0};
+    }
+}
+
+void DrawCubes() {
+    for (unsigned i = 0; i < _n_cubes; ++i) {
+        Cube cur_cube = cubes[i];
+        DrawCube(cur_cube.pos, cur_cube.dim.x, cur_cube.dim.y, cur_cube.dim.z, cur_cube.col);
+    }
 }
 
 void DeInitGlobal() {
@@ -47,6 +63,31 @@ void HandleEvents() {
         cam_state = WantsToPan;
     } else {
         cam_state = Static;
+    }
+
+    if (IsKeyPressed(KEY_SPACE)) {
+        Ray ray;
+        ray.position = cam->position;
+        ray.direction = GetCameraForward(cam);
+
+        BoundingBox ground = {
+            .min = (Vector3){-100.0f, 0.0f, -100.0f},
+            .max = (Vector3){100.0f, 0.0f, 100.0f}
+        };
+
+        RayCollision ground_collision = GetRayCollisionBox(ray, ground);
+
+        if (ground_collision.hit) {
+            Vector3 col_point = ground_collision.point;
+            Cube new_cube = {
+                .pos = (Vector3){col_point.x, col_point.y + 0.5f, col_point.z},
+                .dim = (Vector3){1.0f, 1.0f, 1.0f},
+                .col = RED
+            };
+
+            cubes[_n_cubes] = new_cube;
+            _n_cubes++;
+        }
     }
 
     cam_speed = (IsKeyDown(KEY_LEFT_SHIFT)) ? CAMERA_MAX_SPEED : CAMERA_MOVE_SPEED;
@@ -112,8 +153,9 @@ void Draw() {
         ClearBackground(RAYWHITE);
 
         BeginMode3D(*cam); {
+            DrawCubes();
 
-            DrawGrid(10, 1.0f);
+            DrawGrid(1000, 1.0f);
 
         } EndMode3D();
     } EndDrawing();
