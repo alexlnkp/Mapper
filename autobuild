@@ -3,11 +3,26 @@
 _BINDIR="bin"
 
 _CSTANDART="c99"
-_CFLAGS="-Wall -Wextra -Wpedantic -O3 -std=${_CSTANDART} -lraylib -lm"
+_CFLAGS="-Wall -Wextra -Wpedantic -O3 -std=${_CSTANDART} -flto -lraylib -lm"
 
 _EDITOR_SOURCES="src/editor.c"
 
 mkdir -p ${_BINDIR}
-gcc -s ${_EDITOR_SOURCES} ${_CFLAGS} -o ${_BINDIR}/editor
+
+# prefer tcc over gcc UNLESS `-g` is provided
+if ! [[ $1 = "-g" ]]; then
+    if ! command -v tcc &> /dev/null
+    then
+        gcc ${_EDITOR_SOURCES} ${_CFLAGS} -Wl,--gc-sections -ffunction-sections -fdata-sections -o ${_BINDIR}/editor
+    else
+        tcc ${_EDITOR_SOURCES} ${_CFLAGS} -o ${_BINDIR}/editor
+    fi
+else
+    gcc ${_EDITOR_SOURCES} ${_CFLAGS} -Wl,--gc-sections -ffunction-sections -fdata-sections -o ${_BINDIR}/editor
+fi
+
+strip -S -s -R .comment -R .gnu.version ${_BINDIR}/editor
+
+cloc .
 
 wc -c ${_BINDIR}/editor
