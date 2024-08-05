@@ -9,14 +9,9 @@ _EDITOR_SOURCES="src/editor.c"
 
 mkdir -p ${_BINDIR}
 
-# prefer tcc over gcc UNLESS `-g` is provided
-if ! [[ $1 = "-g" ]]; then
-    if ! command -v tcc &> /dev/null
-    then
-        gcc ${_EDITOR_SOURCES} ${_CFLAGS} -Wl,--gc-sections -ffunction-sections -fdata-sections -o ${_BINDIR}/editor
-    else
-        tcc ${_EDITOR_SOURCES} ${_CFLAGS} -o ${_BINDIR}/editor
-    fi
+# prefer gcc over tcc UNLESS `-t` is provided
+if [[ $1 = "-t" ]]; then
+    tcc ${_EDITOR_SOURCES} ${_CFLAGS} -o ${_BINDIR}/editor
 else
     gcc ${_EDITOR_SOURCES} ${_CFLAGS} -Wl,--gc-sections -ffunction-sections -fdata-sections -o ${_BINDIR}/editor
 fi
