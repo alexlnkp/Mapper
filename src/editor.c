@@ -1,6 +1,6 @@
-#include <stdio.h>
 #include <assert.h>
 #include <stddef.h>
+
 #include <raylib.h>
 #include <rcamera.h>
 
@@ -16,7 +16,7 @@ CameraState cam_state;
 void CameraInit() {
     *cam = (Camera){0};
     cam->position = (Vector3){0.0f, 1.0f, 0.0f};
-    cam->target   = (Vector3){1.0f, 0.0f, 0.0f};
+    cam->target   = (Vector3){1.0f, 1.0f, 0.0f};
     cam->up       = (Vector3){0.0f, 1.0f, 0.0f};
     cam->fovy = 45.0f;
     cam->projection = CAMERA_PERSPECTIVE;
@@ -47,6 +47,12 @@ void HandleEvents() {
 
     case WantsToMoveFreely: {
         /* Handle camera movement for free cam */
+
+        char z = IsKeyDown(KEY_W) - IsKeyDown(KEY_S);
+        char x = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
+
+        CameraMoveForward(cam, CAMERA_MOVE_SPEED * z, false);
+        CameraMoveRight(cam, CAMERA_MOVE_SPEED * x, false);
 
     } break;
 
