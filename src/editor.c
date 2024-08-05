@@ -13,6 +13,9 @@
 Camera* cam;
 CameraState cam_state;
 float cam_speed;
+
+BoundingBox ground;
+
 Cube cubes[1024];
 unsigned _n_cubes;
 /* ---------------- */
@@ -37,6 +40,9 @@ void CameraInit() {
 void InitGlobal() {
     MALLOC(cam, sizeof(Camera));
     CameraInit();
+
+    ground.min = GROUND_MIN_BOUND;
+    ground.max = GROUND_MAX_BOUND;
 
     _n_cubes = 0;
 
@@ -69,11 +75,6 @@ void HandleEvents() {
         Ray ray;
         ray.position = cam->position;
         ray.direction = GetCameraForward(cam);
-
-        BoundingBox ground = {
-            .min = (Vector3){-100.0f, 0.0f, -100.0f},
-            .max = (Vector3){100.0f, 0.0f, 100.0f}
-        };
 
         RayCollision ground_collision = GetRayCollisionBox(ray, ground);
 
@@ -155,7 +156,7 @@ void Draw() {
         BeginMode3D(*cam); {
             DrawCubes();
 
-            DrawGrid(1000, 1.0f);
+            DrawGrid((int)GROUND_TOTAL_LENGTH, 1.0f);
 
         } EndMode3D();
     } EndDrawing();
