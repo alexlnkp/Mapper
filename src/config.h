@@ -8,6 +8,9 @@
 #define TARGET_FPS 60
 
 #define CAMERA_MOUSE_SENSITIVITY 0.003f
-#define CAMERA_MOVE_SPEED 1.0f
+#define CAMERA_MOVE_SPEED 0.6f
+#define CAMERA_MAX_SPEED 1.5f
+#define CAMERA_PAN_SPEED 0.08f
+#define CAMERA_FOV 100.0f
 
 #endif /* CONFIG_H */

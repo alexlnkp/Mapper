@@ -12,7 +12,8 @@ void CameraUpdate();
 
 typedef enum CameraState {
     Static,
-    WantsToMoveFreely
+    WantsToMoveFreely,
+    WantsToPan
 } CameraState;
 
 #endif /* EDITOR_H */
