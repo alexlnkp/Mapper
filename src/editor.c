@@ -17,8 +17,8 @@ float cam_speed;
 
 BoundingBox ground;
 
-Cube* cubes;
-unsigned _n_cubes;
+Object* objects;
+unsigned _n_objs;
 /* ---------------- */
 
 inline float vFov_from_hFov(float hFov, float aspect) {
@@ -37,6 +37,14 @@ void CameraInit(void) {
     cam_speed = CAMERA_MOVE_SPEED;
 }
 
+void ObjectsInit(void) {
+    _n_objs = 0;
+    MALLOC(objects, sizeof(Object) * OBJECTS_MEMORY_RESERVE);
+    for (unsigned i = _n_objs; i < OBJECTS_MEMORY_RESERVE; ++i) {
+        objects[i] = (Object){0};
+    }
+}
+
 void InitGlobal(void) {
     MALLOC(cam, sizeof(Camera));
     CameraInit();
@@ -44,8 +52,7 @@ void InitGlobal(void) {
     ground.min = GROUND_MIN_BOUND;
     ground.max = GROUND_MAX_BOUND;
 
-    _n_cubes = 0;
-    MALLOC(cubes, sizeof(Cube) * CUBES_RESERVED_MEMORY);
+    ObjectsInit();
 }
 
 void CreateCube(void) {
@@ -57,32 +64,47 @@ void CreateCube(void) {
 
     if (ground_collision.hit) {
         Vector3 col_point = ground_collision.point;
-        Cube new_cube = {
+        Object new_cube = {
             .pos = (Vector3){col_point.x, col_point.y + 0.5f, col_point.z},
-            .dim = (Vector3){1.0f, 1.0f, 1.0f},
+            .type = CUBE,
+            .data.Cube = {
+                .dim = (Vector3){1.0f, 1.0f, 1.0f}
+            },
             .col = RED
         };
 
-        if ((_n_cubes + 1) % CUBES_RESERVED_MEMORY == 0) {
-            REALLOC(cubes, sizeof(Cube) * (_n_cubes + CUBES_RESERVED_MEMORY));
-            TraceLog(LOG_DEBUG, "Realloc'd for %d more cubes! Cubes total: %d", CUBES_RESERVED_MEMORY, _n_cubes + 1);
+        if ((_n_objs + 1) % OBJECTS_MEMORY_RESERVE == 0) {
+            REALLOC(objects, sizeof(Object) * (_n_objs + OBJECTS_MEMORY_RESERVE));
+            TraceLog(LOG_DEBUG, "Realloc'd for %d more objects! Objects total: %d", OBJECTS_MEMORY_RESERVE, _n_objs + 1);
+
+            for (unsigned i = _n_objs; i < (_n_objs + OBJECTS_MEMORY_RESERVE); ++i) {
+                objects[i] = (Object){0};
+            }
         }
 
-        cubes[_n_cubes] = new_cube;
-        _n_cubes++;
+        objects[_n_objs] = new_cube;
+        _n_objs++;
     }
 }
 
 void DrawCubes(void) {
-    for (unsigned i = 0; i < _n_cubes; ++i) {
-        Cube cur_cube = cubes[i];
-        DrawCube(cur_cube.pos, cur_cube.dim.x, cur_cube.dim.y, cur_cube.dim.z, cur_cube.col);
+    for (unsigned i = 0; i < _n_objs; ++i) {
+        Object cur_obj = objects[i];
+
+        switch (cur_obj.type) {
+        case CUBE: {
+            Vector3 _dim = cur_obj.data.Cube.dim;
+            DrawCube(cur_obj.pos, _dim.x, _dim.y, _dim.z, cur_obj.col);
+        } break;
+
+        default: {} break;
+        }
     }
 }
 
 void DeInitGlobal(void) {
     FREE(cam);
-    FREE(cubes);
+    FREE(objects);
 }
 
 void HandleEvents(void) {

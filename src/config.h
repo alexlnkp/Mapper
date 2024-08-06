@@ -18,6 +18,6 @@
 #define GROUND_MIN_BOUND (Vector3){-GROUND_LENGTH, 0.0f, -GROUND_LENGTH}
 #define GROUND_MAX_BOUND (Vector3){GROUND_LENGTH, 0.0f, GROUND_LENGTH}
 
-#define CUBES_RESERVED_MEMORY 10 /* how much cubes we can reserve in advance during reallocation */
+#define OBJECTS_MEMORY_RESERVE 10 /* how much objects we can reserve in advance during reallocation */
 
 #endif /* CONFIG_H */

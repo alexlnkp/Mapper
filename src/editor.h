@@ -18,10 +18,24 @@ typedef enum CameraState {
     WantsToPan
 } CameraState;
 
-typedef struct Cube {
-    Vector3 pos; /* Center point of the cube in the world space */
-    Vector3 dim; /* Dimensionality of the cube; x for width, y for height, z for length */
+typedef enum ObjType {
+    CUBE,
+    SPHERE
+} ObjectType;
+
+typedef struct Object {
+    Vector3 pos; /* Center point of the object in the world space */
+    ObjectType type;
     Color col;
-} Cube;
+    union {
+        struct {
+            Vector3 dim; /* Dimensionality of the cube; x for width, y for height, z for length */
+        } Cube;
+
+        struct {
+            float radius;
+        } Sphere;
+    } data;
+} Object;
 
 #endif /* EDITOR_H */
