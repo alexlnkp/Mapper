@@ -1,13 +1,27 @@
 #!/bin/bash
 
+_RAYGUI_URL="https://raw.githubusercontent.com/raysan5/raygui/master/src/raygui.h"
+
 _BINDIR="bin"
+_VENDOR_DIR="lib"
 
 _CSTANDART="c99"
-_CFLAGS="-Wall -Wextra -Wpedantic -O3 -std=${_CSTANDART} -flto -lraylib -lm"
+_CFLAGS="-Wall -Wextra -Wpedantic -O3 -std=${_CSTANDART} -I${_VENDOR_DIR} -flto -lraylib -lm"
+
+# remove annoying warnings from raygui
+_CFLAGS="${_CFLAGS} -Wno-unused-variable -Wno-unused-parameter"
+
+_CFLAGS="${_CFLAGS} -DRAYGUI_IMPLEMENTATION"
 
 _EDITOR_SOURCES="src/editor.c"
 
 mkdir -p ${_BINDIR}
+mkdir -p ${_VENDOR_DIR}
+
+if [[ ! -f "${_VENDOR_DIR}/raygui.h" ]]; then
+    curl ${_RAYGUI_URL} > ${_VENDOR_DIR}/raygui.h
+    patch lib/raygui.h -p1 < etc/raygui-fix.patch
+fi
 
 # prefer gcc over tcc UNLESS `-t` is provided
 if [[ $1 = "-t" ]]; then
@@ -18,6 +32,6 @@ fi
 
 strip -S -s -R .comment -R .gnu.version ${_BINDIR}/editor
 
-cloc .
+cloc . --exclude-dir=lib,bin,.vscode --exclude-lang='Bourne Again Shell',diff
 
 wc -c ${_BINDIR}/editor

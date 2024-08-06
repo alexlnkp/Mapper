@@ -1,14 +1,14 @@
 #ifndef   EDITOR_H
 #define   EDITOR_H
 
-void InitGlobal();
-void DeInitGlobal();
+void InitGlobal(void);
+void DeInitGlobal(void);
 
-void HandleEvents();
-void Update();
-void Draw();
+void HandleEvents(void);
+void Update(void);
+void Draw(void);
 
-void CameraUpdate();
+void CameraUpdate(void);
 
 typedef enum CameraState {
     Static,

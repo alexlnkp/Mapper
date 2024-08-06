@@ -1,9 +1,11 @@
 #include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include <raylib.h>
 #include <rcamera.h>
 #include <raymath.h>
+#include "raygui.h"
 
 #include "config.h"
 #include "editor.h"
@@ -24,8 +26,7 @@ inline float vFov_from_hFov(float hFov, float aspect) {
     return (2.0f * atan(tan((hFov * DEG2RAD) / 2.0f) / aspect)) * RAD2DEG;
 }
 
-
-void CameraInit() {
+void CameraInit(void) {
     *cam = (Camera){0};
     cam->position = (Vector3){0.0f, 1.0f, 0.0f};
     cam->target   = (Vector3){1.0f, 1.0f, 0.0f};
@@ -37,7 +38,7 @@ void CameraInit() {
     cam_speed = CAMERA_MOVE_SPEED;
 }
 
-void InitGlobal() {
+void InitGlobal(void) {
     MALLOC(cam, sizeof(Camera));
     CameraInit();
 
@@ -51,18 +52,38 @@ void InitGlobal() {
     }
 }
 
-void DrawCubes() {
+void CreateCube(void) {
+    Ray ray;
+    ray.position = cam->position;
+    ray.direction = GetCameraForward(cam);
+
+    RayCollision ground_collision = GetRayCollisionBox(ray, ground);
+
+    if (ground_collision.hit) {
+        Vector3 col_point = ground_collision.point;
+        Cube new_cube = {
+            .pos = (Vector3){col_point.x, col_point.y + 0.5f, col_point.z},
+            .dim = (Vector3){1.0f, 1.0f, 1.0f},
+            .col = RED
+        };
+
+        cubes[_n_cubes] = new_cube;
+        _n_cubes++;
+    }
+}
+
+void DrawCubes(void) {
     for (unsigned i = 0; i < _n_cubes; ++i) {
         Cube cur_cube = cubes[i];
         DrawCube(cur_cube.pos, cur_cube.dim.x, cur_cube.dim.y, cur_cube.dim.z, cur_cube.col);
     }
 }
 
-void DeInitGlobal() {
+void DeInitGlobal(void) {
     FREE(cam);
 }
 
-void HandleEvents() {
+void HandleEvents(void) {
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
         cam_state = WantsToMoveFreely;
     } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) & IsKeyDown(KEY_LEFT_SHIFT)) {
@@ -72,23 +93,7 @@ void HandleEvents() {
     }
 
     if (IsKeyPressed(KEY_SPACE)) {
-        Ray ray;
-        ray.position = cam->position;
-        ray.direction = GetCameraForward(cam);
-
-        RayCollision ground_collision = GetRayCollisionBox(ray, ground);
-
-        if (ground_collision.hit) {
-            Vector3 col_point = ground_collision.point;
-            Cube new_cube = {
-                .pos = (Vector3){col_point.x, col_point.y + 0.5f, col_point.z},
-                .dim = (Vector3){1.0f, 1.0f, 1.0f},
-                .col = RED
-            };
-
-            cubes[_n_cubes] = new_cube;
-            _n_cubes++;
-        }
+        CreateCube();
     }
 
     cam_speed = (IsKeyDown(KEY_LEFT_SHIFT)) ? CAMERA_MAX_SPEED : CAMERA_MOVE_SPEED;
@@ -96,11 +101,16 @@ void HandleEvents() {
     switch(cam_state) {
     case Static: {
         /* Handle shortcuts or whatever */
+        GuiEnable();
+        GuiUnlock();
 
     } break;
 
     case WantsToMoveFreely: {
         /* Handle camera movement for free cam */
+
+        GuiDisable();
+        GuiLock();
 
         char z = IsKeyDown(KEY_W) - IsKeyDown(KEY_S);
         char x = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
@@ -111,16 +121,17 @@ void HandleEvents() {
     } break;
 
     default: {
-
+        GuiDisable();
+        GuiLock();
     } break;
     }
 }
 
-void Update() {
+void Update(void) {
     CameraUpdate();
 }
 
-void CameraUpdate() {
+void CameraUpdate(void) {
     const Vector2 mouseDelta = GetMouseDelta();
 
     switch (cam_state) {
@@ -149,7 +160,13 @@ void CameraUpdate() {
     }
 }
 
-void Draw() {
+void DrawGUI(void) {
+    if (GuiButton((Rectangle){.height=30.0f, .width=100.0f, .x=0.0f, .y=0.0f}, "#80#Create cube")) {
+        CreateCube();
+    }
+}
+
+void Draw(void) {
     BeginDrawing(); {
         ClearBackground(RAYWHITE);
 
@@ -159,10 +176,12 @@ void Draw() {
             DrawGrid((int)GROUND_TOTAL_LENGTH, 1.0f);
 
         } EndMode3D();
+        DrawGUI();
     } EndDrawing();
 }
 
 int main(void) {
+    SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_MSAA_4X_HINT);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
     SetTargetFPS(TARGET_FPS);
 
