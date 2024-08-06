@@ -1,6 +1,10 @@
 #ifndef   EDITOR_H
 #define   EDITOR_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void InitGlobal(void);
 void DeInitGlobal(void);
 
@@ -37,5 +41,9 @@ typedef struct Object {
         } Sphere;
     } data;
 } Object;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EDITOR_H */
