@@ -1,12 +1,11 @@
 #include <assert.h>
 #include <stddef.h>
 
-
 #include <raylib.h>
 #include <rcamera.h>
 #include <raymath.h>
-#include "raygui.h"
 
+#include "ui.h"
 #include "config.h"
 #include "editor.h"
 #include "funkymacros.h"
@@ -104,16 +103,16 @@ void HandleEvents(void) {
     switch(cam_state) {
     case Static: {
         /* Handle shortcuts or whatever */
-        GuiEnable();
-        GuiUnlock();
+        EnableGUI();
+        UnlockGUI();
 
     } break;
 
     case WantsToMoveFreely: {
         /* Handle camera movement for free cam */
 
-        GuiDisable();
-        GuiLock();
+        DisableGUI();
+        LockGUI();
 
         char z = IsKeyDown(KEY_W) - IsKeyDown(KEY_S);
         char x = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
@@ -124,8 +123,8 @@ void HandleEvents(void) {
     } break;
 
     default: {
-        GuiDisable();
-        GuiLock();
+        DisableGUI();
+        LockGUI();
     } break;
     }
 }
@@ -160,12 +159,6 @@ void CameraUpdate(void) {
     default: {
         EnableCursor();
     } break;
-    }
-}
-
-void DrawGUI(void) {
-    if (GuiButton((Rectangle){.height=30.0f, .width=100.0f, .x=0.0f, .y=0.0f}, "#80#Create cube")) {
-        CreateCube();
     }
 }
 

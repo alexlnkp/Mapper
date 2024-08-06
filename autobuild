@@ -13,7 +13,7 @@ _CFLAGS="${_CFLAGS} -Wno-unused-variable -Wno-unused-parameter"
 
 _CFLAGS="${_CFLAGS} -DRAYGUI_IMPLEMENTATION"
 
-_EDITOR_SOURCES="src/editor.c"
+_EDITOR_SOURCES="src/editor.c src/ui.c"
 
 mkdir -p ${_BINDIR}
 mkdir -p ${_VENDOR_DIR}

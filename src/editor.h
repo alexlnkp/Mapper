@@ -8,6 +8,8 @@ void HandleEvents(void);
 void Update(void);
 void Draw(void);
 
+void CreateCube(void);
+
 void CameraUpdate(void);
 
 typedef enum CameraState {
