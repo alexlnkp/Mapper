@@ -198,6 +198,7 @@ int main(void) {
         Draw();
     }
 
+    DeInitGlobal();
     CloseWindow();
 
     return 0;
