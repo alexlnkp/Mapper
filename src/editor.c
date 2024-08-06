@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <stddef.h>
-#include <stdio.h>
+
 
 #include <raylib.h>
 #include <rcamera.h>
@@ -18,7 +18,7 @@ float cam_speed;
 
 BoundingBox ground;
 
-Cube cubes[1024];
+Cube* cubes;
 unsigned _n_cubes;
 /* ---------------- */
 
@@ -46,10 +46,7 @@ void InitGlobal(void) {
     ground.max = GROUND_MAX_BOUND;
 
     _n_cubes = 0;
-
-    for (unsigned i = 0; i < sizeof(cubes) / sizeof(cubes[0]); ++i) {
-        cubes[i] = (Cube){0};
-    }
+    MALLOC(cubes, sizeof(Cube) * CUBES_RESERVED_MEMORY);
 }
 
 void CreateCube(void) {
@@ -67,6 +64,11 @@ void CreateCube(void) {
             .col = RED
         };
 
+        if ((_n_cubes + 1) % CUBES_RESERVED_MEMORY == 0) {
+            REALLOC(cubes, sizeof(Cube) * (_n_cubes + CUBES_RESERVED_MEMORY));
+            TraceLog(LOG_DEBUG, "Realloc'd for %d more cubes! Cubes total: %d", CUBES_RESERVED_MEMORY, _n_cubes + 1);
+        }
+
         cubes[_n_cubes] = new_cube;
         _n_cubes++;
     }
@@ -81,6 +83,7 @@ void DrawCubes(void) {
 
 void DeInitGlobal(void) {
     FREE(cam);
+    FREE(cubes);
 }
 
 void HandleEvents(void) {

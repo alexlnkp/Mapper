@@ -2,6 +2,7 @@
 #define   FUNKYMACROS_H
 
 #define MALLOCFUNC MemAlloc
+#define REALLOCFUNC MemRealloc
 #define MEMFREEFUNC MemFree
 
 #ifndef   NDEBUG
@@ -10,9 +11,16 @@
     self = MALLOCFUNC(size); \
     assert(self != NULL);
 
+#define REALLOC(self, new_size)         \
+    self = REALLOCFUNC(self, new_size); \
+    assert(self != NULL);
+
 #else
 #define MALLOC(self, size)   \
     self = MALLOCFUNC(size);
+
+#define REALLOC(self, new_size)         \
+    self = REALLOCFUNC(self, new_size);
 
 #endif /* NDEBUG */
 
