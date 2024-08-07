@@ -22,6 +22,8 @@ typedef enum CameraState {
     WantsToPan
 } CameraState;
 
+typedef unsigned ObjectCounter;
+
 typedef enum ObjType {
     CUBE,
     SPHERE

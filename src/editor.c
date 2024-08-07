@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <assert.h>
 #include <stddef.h>
 
@@ -18,7 +19,7 @@ float cam_speed;
 BoundingBox ground;
 
 Object* objects;
-unsigned _n_objs;
+ObjectCounter _n_objs;
 /* ---------------- */
 
 inline float vFov_from_hFov(float hFov, float aspect) {
@@ -40,7 +41,7 @@ void CameraInit(void) {
 void ObjectsInit(void) {
     _n_objs = 0;
     MALLOC(objects, sizeof(Object) * OBJECTS_MEMORY_RESERVE);
-    for (unsigned i = _n_objs; i < OBJECTS_MEMORY_RESERVE; ++i) {
+    for (ObjectCounter i = _n_objs; i < OBJECTS_MEMORY_RESERVE; ++i) {
         objects[i] = (Object){0};
     }
 }
@@ -53,6 +54,18 @@ void InitGlobal(void) {
     ground.max = GROUND_MAX_BOUND;
 
     ObjectsInit();
+}
+
+void ExportObjects(void) {
+    FILE *fp = fopen("test_map.lol", "wb");
+
+    fwrite(&_n_objs, sizeof(ObjectCounter), 1, fp);
+
+    for (ObjectCounter i = 0; i < _n_objs; ++i) {
+        fwrite(&objects[i], sizeof(Object), 1, fp);
+    }
+
+    fclose(fp);
 }
 
 void CreateCube(void) {
@@ -77,7 +90,7 @@ void CreateCube(void) {
             REALLOC(objects, sizeof(Object) * (_n_objs + OBJECTS_MEMORY_RESERVE));
             TraceLog(LOG_DEBUG, "Realloc'd for %d more objects! Objects total: %d", OBJECTS_MEMORY_RESERVE, _n_objs + 1);
 
-            for (unsigned i = _n_objs; i < (_n_objs + OBJECTS_MEMORY_RESERVE); ++i) {
+            for (ObjectCounter i = _n_objs; i < (_n_objs + OBJECTS_MEMORY_RESERVE); ++i) {
                 objects[i] = (Object){0};
             }
         }
@@ -88,7 +101,7 @@ void CreateCube(void) {
 }
 
 void DrawCubes(void) {
-    for (unsigned i = 0; i < _n_objs; ++i) {
+    for (ObjectCounter i = 0; i < _n_objs; ++i) {
         Object cur_obj = objects[i];
 
         switch (cur_obj.type) {
@@ -118,6 +131,12 @@ void HandleEvents(void) {
 
     if (IsKeyPressed(KEY_SPACE)) {
         CreateCube();
+    }
+
+    if (IsKeyDown(KEY_LEFT_CONTROL)) {
+        if (IsKeyPressed(KEY_S)) {
+            ExportObjects();
+        }
     }
 
     cam_speed = (IsKeyDown(KEY_LEFT_SHIFT)) ? CAMERA_MAX_SPEED : CAMERA_MOVE_SPEED;

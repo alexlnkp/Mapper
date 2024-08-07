@@ -14,6 +14,7 @@ _CFLAGS="${_CFLAGS} -Wno-unused-variable -Wno-unused-parameter"
 _CFLAGS="${_CFLAGS} -DRAYGUI_IMPLEMENTATION"
 
 _EDITOR_SOURCES="src/editor.c src/ui.c"
+_MAPREADER_SOURCES="examples/readmap.c"
 
 mkdir -p ${_BINDIR}
 mkdir -p ${_VENDOR_DIR}
@@ -27,11 +28,15 @@ fi
 if [[ $1 = "-t" ]]; then
     tcc ${_EDITOR_SOURCES} ${_CFLAGS} -o ${_BINDIR}/editor
 else
-    gcc ${_EDITOR_SOURCES} ${_CFLAGS} -Wl,--gc-sections -ffunction-sections -fdata-sections -o ${_BINDIR}/editor
+    _CFLAGS="${_CFLAGS} -Wl,--gc-sections -ffunction-sections -fdata-sections"
+    gcc ${_EDITOR_SOURCES} ${_CFLAGS} -o ${_BINDIR}/editor
+    gcc ${_MAPREADER_SOURCES} ${_CFLAGS} -Isrc -o ${_BINDIR}/mapreader
 fi
 
 strip -S -s -R .comment -R .gnu.version ${_BINDIR}/editor
+strip -S -s -R .comment -R .gnu.version ${_BINDIR}/mapreader
 
 cloc . --exclude-dir=lib,bin,.vscode --exclude-lang='Bourne Again Shell',diff
 
 wc -c ${_BINDIR}/editor
+wc -c ${_BINDIR}/mapreader
