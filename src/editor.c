@@ -22,6 +22,8 @@ float cam_speed;
 BoundingBox ground;
 
 Map map;
+
+Object* selected_obj;
 /* ---------------- */
 
 inline float vFov_from_hFov(float hFov, float aspect) {
@@ -46,6 +48,7 @@ void ObjectsInit(void) {
     for (ObjectCounter i = map.num_objects; i < OBJECTS_MEMORY_RESERVE; ++i) {
         map.objects[i] = (Object){0};
     }
+    selected_obj = NULL;
 }
 
 void MapInit(void) {
@@ -160,7 +163,7 @@ ObjectCounter GetObjectIndexUnderMouse(Vector2 mousePosition) {
         }
     }
 
-    return -1; // No object was clicked
+    return -1; /* No object was clicked */
 }
 
 void DrawObjects(void) {
@@ -170,6 +173,10 @@ void DrawObjects(void) {
         switch (cur_obj.type) {
         case CUBE: {
             Vector3 _dim = cur_obj.data.Cube.dim;
+            if (selected_obj != NULL && selected_obj == &map.objects[i]) {
+                /* A VERY hacky way to do an object outline. Won't work for more complex shapes. */
+                DrawCube(cur_obj.pos, _dim.x*-1.04, _dim.y*-1.04, _dim.z*-1.04, (Color){255, 202, 76, 255});
+            }
             DrawCube(cur_obj.pos, _dim.x, _dim.y, _dim.z, cur_obj.col);
         } break;
 
@@ -223,7 +230,11 @@ void HandleEvents(void) {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             ObjectCounter obj_index = GetObjectIndexUnderMouse(GetMousePosition());
             if (obj_index != (ObjectCounter)-1) {
-                /*Do something with it using map.objects[obj_index]*/
+                /* User clicked on an object */
+                selected_obj = &map.objects[obj_index];
+            } else {
+                /* User clicked on nothing */
+                selected_obj = NULL;
             }
         }
 
