@@ -9,15 +9,15 @@ const char* GetObjectType(ObjectType type) {
     switch (type) {
     case CUBE: {
         return "Cube";
-    } break;
+    }
 
     case SPHERE: {
         return "Sphere";
-    } break;
+    }
 
     default: {
         return "IDK what that is";
-    } break;
+    }
     }
 
     assert(false);
@@ -49,8 +49,10 @@ int main(int argc, char* argv[]) {
 
     for (ObjectCounter i = 0; i < _n_objs; ++i) {
         Object cur_obj = objects[i];
+        Vector3 cur_obj_dim = cur_obj.data.Cube.dim;
         printf("Object %d: %s; ", i, GetObjectType(cur_obj.type));
         printf("Color: RGB(%d, %d, %d); ", cur_obj.col.r, cur_obj.col.g, cur_obj.col.b);
+        printf("Dimensionality: {%f; %f; %f}; ", cur_obj_dim.x, cur_obj_dim.y, cur_obj_dim.z);
         printf("Location: {%f; %f; %f}\n", cur_obj.pos.x, cur_obj.pos.y, cur_obj.pos.z);
     }
 
