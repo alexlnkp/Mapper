@@ -130,6 +130,39 @@ void CreateCube(void) {
     }
 }
 
+ObjectCounter GetObjectIndexUnderMouse(Vector2 mousePosition) {
+    Ray ray = GetMouseRay(mousePosition, *cam);
+
+    for (ObjectCounter i = 0; i < map.num_objects; ++i) {
+        Object cur_obj = map.objects[i];
+
+        RayCollision obj_collision;
+
+        switch(cur_obj.type) {
+        case CUBE: {
+            BoundingBox cube_bb = {
+                .min = Vector3Subtract(cur_obj.pos, Vector3Scale(cur_obj.data.Cube.dim, 0.5f)),
+                .max = Vector3Add(cur_obj.pos, Vector3Scale(cur_obj.data.Cube.dim, 0.5f))
+            };
+            obj_collision = GetRayCollisionBox(ray, cube_bb);
+        } break;
+        case SPHERE: {
+            obj_collision = GetRayCollisionSphere(ray, cur_obj.pos, cur_obj.data.Sphere.radius);
+        } break;
+
+        default: {} break;
+        }
+
+        if (obj_collision.hit) {
+            TraceLog(LOG_DEBUG, "Clicked an object with index %d at {%f; %f; %f}",
+                i, cur_obj.pos.x, cur_obj.pos.y, cur_obj.pos.z);
+            return i;
+        }
+    }
+
+    return -1; // No object was clicked
+}
+
 void DrawObjects(void) {
     for (ObjectCounter i = 0; i < map.num_objects; ++i) {
         Object cur_obj = map.objects[i];
@@ -182,17 +215,19 @@ void HandleEvents(void) {
         UnlockCursor();
     }
 
-    if (IsKeyDown(KEY_LEFT_CONTROL)) {
-        if (IsKeyPressed(KEY_S)) {
-            ExportMap();
-        }
-    }
-
     cam_speed = (IsKeyDown(KEY_LEFT_SHIFT)) ? CAMERA_MAX_SPEED : CAMERA_MOVE_SPEED;
 
     switch(cam_state) {
     case Static: {
         /* Handle shortcuts or whatever */
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            ObjectCounter obj_index = GetObjectIndexUnderMouse(GetMousePosition());
+            if (obj_index != (unsigned)-1) {
+                /*Do something with it using map.objects[obj_index]*/
+            }
+        }
+
+        if (IsKeyDown(KEY_LEFT_CONTROL) & IsKeyPressed(KEY_S)) ExportMap();
 
     } break;
 
