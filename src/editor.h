@@ -44,6 +44,18 @@ typedef struct Object {
     } data;
 } Object;
 
+typedef struct MapMetadata {
+    char* name;
+    char* author;
+} MapMetadata;
+
+typedef struct Map {
+    Vector3 dim; /* Dimensionality of the WHOLE MAP; x for width, y for height, z for length */
+    Object* objects;
+    ObjectCounter num_objects;
+    MapMetadata meta;
+} Map;
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stddef.h>
+#include <string.h>
 
 #include <raylib.h>
 #include <rcamera.h>
@@ -18,8 +19,7 @@ float cam_speed;
 
 BoundingBox ground;
 
-Object* objects;
-ObjectCounter _n_objs;
+Map map;
 /* ---------------- */
 
 inline float vFov_from_hFov(float hFov, float aspect) {
@@ -39,11 +39,25 @@ void CameraInit(void) {
 }
 
 void ObjectsInit(void) {
-    _n_objs = 0;
-    MALLOC(objects, sizeof(Object) * OBJECTS_MEMORY_RESERVE);
-    for (ObjectCounter i = _n_objs; i < OBJECTS_MEMORY_RESERVE; ++i) {
-        objects[i] = (Object){0};
+    map.num_objects = 0;
+    MALLOC(map.objects, sizeof(Object) * OBJECTS_MEMORY_RESERVE);
+    for (ObjectCounter i = map.num_objects; i < OBJECTS_MEMORY_RESERVE; ++i) {
+        map.objects[i] = (Object){0};
     }
+}
+
+void MapInit(void) {
+    map.dim = (Vector3){
+        .x=GROUND_TOTAL_LENGTH,
+        .y=GROUND_TOTAL_LENGTH, /* Filler value, will be replaced later */
+        .z=GROUND_TOTAL_LENGTH
+    };
+    map.meta = (MapMetadata){
+        .author="",
+        .name=""
+    };
+    
+    ObjectsInit();
 }
 
 void InitGlobal(void) {
@@ -53,17 +67,29 @@ void InitGlobal(void) {
     ground.min = GROUND_MIN_BOUND;
     ground.max = GROUND_MAX_BOUND;
 
-    ObjectsInit();
+    MapInit();
 }
 
-void ExportObjects(void) {
-    FILE *fp = fopen("test_map.lol", "wb");
+void SetMapMetadata(MapMetadata new_metadata) {
+    map.meta = new_metadata;
+}
 
-    fwrite(&_n_objs, sizeof(ObjectCounter), 1, fp);
+void ExportMap(void) {
+    map.meta.author = (strcmp(map.meta.author, "") == 0) ? DEFAULT_MAP_AUTHOR : map.meta.author;
+    map.meta.name = (strcmp(map.meta.name, "") == 0) ? DEFAULT_MAP_NAME : map.meta.name;
+    
+    FILE *fp = fopen(map.meta.name, "wb");
+    assert(fp != NULL);
 
-    for (ObjectCounter i = 0; i < _n_objs; ++i) {
-        fwrite(&objects[i], sizeof(Object), 1, fp);
+    fwrite(&map.num_objects, sizeof(ObjectCounter), 1, fp);
+
+    for (ObjectCounter i = 0; i < map.num_objects; ++i) {
+        fwrite(&map.objects[i], sizeof(Object), 1, fp);
     }
+
+    /* Meta is the last to be stored */
+    fwrite(map.meta.name, sizeof(char) * (strlen(map.meta.name) + 1), 1, fp);
+    fwrite(map.meta.author, sizeof(char) * (strlen(map.meta.author) + 1), 1, fp);
 
     fclose(fp);
 }
@@ -86,23 +112,23 @@ void CreateCube(void) {
             .col = RED
         };
 
-        if ((_n_objs + 1) % OBJECTS_MEMORY_RESERVE == 0) {
-            REALLOC(objects, sizeof(Object) * (_n_objs + OBJECTS_MEMORY_RESERVE));
-            TraceLog(LOG_DEBUG, "Realloc'd for %d more objects! Objects total: %d", OBJECTS_MEMORY_RESERVE, _n_objs + 1);
+        if ((map.num_objects + 1) % OBJECTS_MEMORY_RESERVE == 0) {
+            REALLOC(map.objects, sizeof(Object) * (map.num_objects + OBJECTS_MEMORY_RESERVE));
+            TraceLog(LOG_DEBUG, "Realloc'd for %d more objects! Objects total: %d", OBJECTS_MEMORY_RESERVE, map.num_objects + 1);
 
-            for (ObjectCounter i = _n_objs; i < (_n_objs + OBJECTS_MEMORY_RESERVE); ++i) {
-                objects[i] = (Object){0};
+            for (ObjectCounter i = map.num_objects; i < (map.num_objects + OBJECTS_MEMORY_RESERVE); ++i) {
+                map.objects[i] = (Object){0};
             }
         }
 
-        objects[_n_objs] = new_cube;
-        _n_objs++;
+        map.objects[map.num_objects] = new_cube;
+        map.num_objects++;
     }
 }
 
-void DrawCubes(void) {
-    for (ObjectCounter i = 0; i < _n_objs; ++i) {
-        Object cur_obj = objects[i];
+void DrawObjects(void) {
+    for (ObjectCounter i = 0; i < map.num_objects; ++i) {
+        Object cur_obj = map.objects[i];
 
         switch (cur_obj.type) {
         case CUBE: {
@@ -117,7 +143,7 @@ void DrawCubes(void) {
 
 void DeInitGlobal(void) {
     FREE(cam);
-    FREE(objects);
+    FREE(map.objects);
 }
 
 void HandleEvents(void) {
@@ -135,7 +161,7 @@ void HandleEvents(void) {
 
     if (IsKeyDown(KEY_LEFT_CONTROL)) {
         if (IsKeyPressed(KEY_S)) {
-            ExportObjects();
+            ExportMap();
         }
     }
 
@@ -208,7 +234,7 @@ void Draw(void) {
         ClearBackground(RAYWHITE);
 
         BeginMode3D(*cam); {
-            DrawCubes();
+            DrawObjects();
 
             DrawGrid((int)GROUND_TOTAL_LENGTH, 1.0f);
 

@@ -20,4 +20,7 @@
 
 #define OBJECTS_MEMORY_RESERVE 10 /* how much objects we can reserve in advance during reallocation */
 
+#define DEFAULT_MAP_NAME "new_map"
+#define DEFAULT_MAP_AUTHOR "unspecified"
+
 #endif /* CONFIG_H */
