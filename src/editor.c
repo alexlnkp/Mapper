@@ -222,7 +222,7 @@ void HandleEvents(void) {
         /* Handle shortcuts or whatever */
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             ObjectCounter obj_index = GetObjectIndexUnderMouse(GetMousePosition());
-            if (obj_index != (unsigned)-1) {
+            if (obj_index != (ObjectCounter)-1) {
                 /*Do something with it using map.objects[obj_index]*/
             }
         }
