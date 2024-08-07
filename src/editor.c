@@ -13,6 +13,8 @@
 #include "funkymacros.h"
 
 /* Global variables */
+bool cursor_disabled;
+
 Camera* cam;
 CameraState cam_state;
 float cam_speed;
@@ -61,6 +63,8 @@ void MapInit(void) {
 }
 
 void InitGlobal(void) {
+    cursor_disabled = false;
+
     MALLOC(cam, sizeof(Camera));
     CameraInit();
 
@@ -146,17 +150,36 @@ void DeInitGlobal(void) {
     FREE(map.objects);
 }
 
+void LockCursor(void) {
+    /* Lock cursor (ONLY if it's unlocked) */
+    if (!cursor_disabled) {
+        DisableCursor();
+        DisableGUI();
+        LockGUI();
+        cursor_disabled = true;
+    }
+}
+
+void UnlockCursor(void) {
+    /* Unlock cursor (ONLY if it's locked) */
+    if (cursor_disabled) {
+        EnableCursor();
+        EnableGUI();
+        UnlockGUI();
+        cursor_disabled = false;
+    }
+}
+
 void HandleEvents(void) {
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
         cam_state = WantsToMoveFreely;
+        LockCursor();
     } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) & IsKeyDown(KEY_LEFT_SHIFT)) {
         cam_state = WantsToPan;
+        LockCursor();
     } else {
         cam_state = Static;
-    }
-
-    if (IsKeyPressed(KEY_SPACE)) {
-        CreateCube();
+        UnlockCursor();
     }
 
     if (IsKeyDown(KEY_LEFT_CONTROL)) {
@@ -170,16 +193,11 @@ void HandleEvents(void) {
     switch(cam_state) {
     case Static: {
         /* Handle shortcuts or whatever */
-        EnableGUI();
-        UnlockGUI();
 
     } break;
 
     case WantsToMoveFreely: {
         /* Handle camera movement for free cam */
-
-        DisableGUI();
-        LockGUI();
 
         char z = IsKeyDown(KEY_W) - IsKeyDown(KEY_S);
         char x = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
@@ -190,8 +208,6 @@ void HandleEvents(void) {
     } break;
 
     default: {
-        DisableGUI();
-        LockGUI();
     } break;
     }
 }
@@ -201,31 +217,27 @@ void Update(void) {
 }
 
 void CameraUpdate(void) {
-    const Vector2 mouseDelta = GetMouseDelta();
+    if (cam_state) {
+        const Vector2 mouseDelta = GetMouseDelta();
 
-    switch (cam_state) {
-    case WantsToMoveFreely: {
-        DisableCursor();
+        switch (cam_state) {
+        case WantsToMoveFreely: {
+            CameraYaw(cam, -mouseDelta.x*CAMERA_MOUSE_SENSITIVITY, false);
+            CameraPitch(cam, -mouseDelta.y*CAMERA_MOUSE_SENSITIVITY, true, false, false);
+        } break;
 
-        CameraYaw(cam, -mouseDelta.x*CAMERA_MOUSE_SENSITIVITY, false);
-        CameraPitch(cam, -mouseDelta.y*CAMERA_MOUSE_SENSITIVITY, true, false, false);
-    } break;
+        case WantsToPan: {
+            if (mouseDelta.x != 0.0f) {
+                CameraMoveRight(cam, CAMERA_PAN_SPEED * mouseDelta.x, false);
+            }
+            if (mouseDelta.y != 0.0f) {
+                CameraMoveUp(cam, CAMERA_PAN_SPEED * -mouseDelta.y);
+            }
 
-    case WantsToPan: {
-        DisableCursor();
+        } break;
 
-        if (mouseDelta.x != 0.0f) {
-            CameraMoveRight(cam, CAMERA_PAN_SPEED * mouseDelta.x, false);
+        default: {} break;
         }
-        if (mouseDelta.y != 0.0f) {
-            CameraMoveUp(cam, CAMERA_PAN_SPEED * -mouseDelta.y);
-        }
-
-    } break;
-
-    default: {
-        EnableCursor();
-    } break;
     }
 }
 
