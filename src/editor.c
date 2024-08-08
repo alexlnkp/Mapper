@@ -24,6 +24,7 @@ BoundingBox ground;
 Map map;
 
 Object* selected_obj;
+ObjectCounter selected_obj_index;
 /* ---------------- */
 
 inline float vFov_from_hFov(float hFov, float aspect) {
@@ -49,6 +50,7 @@ void ObjectsInit(void) {
         map.objects[i] = (Object){0};
     }
     selected_obj = NULL;
+    selected_obj_index = (ObjectCounter)-1;
 }
 
 void MapInit(void) {
@@ -232,9 +234,11 @@ void HandleEvents(void) {
             if (obj_index != (ObjectCounter)-1) {
                 /* User clicked on an object */
                 selected_obj = &map.objects[obj_index];
+                selected_obj_index = obj_index;
             } else {
                 /* User clicked on nothing */
                 selected_obj = NULL;
+                selected_obj_index = (ObjectCounter)-1;
             }
         }
 
@@ -302,7 +306,7 @@ void Draw(void) {
             DrawGrid((int)GROUND_TOTAL_LENGTH, 1.0f);
 
         } EndMode3D();
-        DrawGUI();
+        DrawGUI(selected_obj_index, selected_obj, map.num_objects, map.objects);
     } EndDrawing();
 }
 

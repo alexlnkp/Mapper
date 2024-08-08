@@ -1,7 +1,9 @@
 #ifndef   UI_H
 #define   UI_H
 
-void DrawGUI(void);
+#include "editor.h"
+
+void DrawGUI(ObjectCounter selected_object_index, Object* selected_object, ObjectCounter num_objects, Object* objects);
 
 void UnlockGUI(void);
 void LockGUI(void);
