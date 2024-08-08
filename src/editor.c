@@ -238,6 +238,11 @@ void HandleEvents(void) {
             }
         }
 
+        float mouse_wheel_delta = GetMouseWheelMove();
+        /*Having an if (mouse_wheel_delta) before this should be technically more correct,
+          but i prefer this look. If issues arise then no doubt i'll change it*/
+        CameraMoveForward(cam, CAMERA_ZOOM_SPEED*mouse_wheel_delta, false);
+
         if (IsKeyDown(KEY_LEFT_CONTROL) & IsKeyPressed(KEY_S)) ExportMap();
 
     } break;
