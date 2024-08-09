@@ -4,9 +4,23 @@
 
 #include "ui.h"
 
+void BeginGUIDraw(void) {
+    ImGui_ImplRaylib_ProcessEvents();
+
+    /* start the Dear ImGui frame */
+    ImGui_ImplRaylib_NewFrame();
+    igNewFrame();
+}
+
+void EndGUIDraw(void) {
+    igRender();
+    ImGui_ImplRaylib_RenderDrawData(igGetDrawData());
+}
+
 void DrawContextMenu(void) {
-    igSetNextWindowPos((ImVec2){0, 0}, 0, (ImVec2){0, 0});
-    igSetNextWindowSize((ImVec2){(float)GetScreenWidth(), (float)GetScreenHeight()}, 0);
+    /* Offset by -1 cause there's a gap for some reason lol */
+    igSetNextWindowPos((ImVec2){-1, 0}, 0, (ImVec2){0, 0});
+    igSetNextWindowSize((ImVec2){(float)GetScreenWidth() + 2, (float)GetScreenHeight()}, 0);
 
     /*we just want to use this window as a host for the menubar and docking
     so turn off everything that would make it act like a window*/
@@ -29,8 +43,8 @@ void DrawContextMenu(void) {
         if (show) {
             if (igBeginMenuBar()) {
                 if (igBeginMenu("File", true)) {
-                    if (igMenuItem_Bool("Exit", "x", false, true)) AskToLeave();
-                    if (igMenuItem_Bool("Export map", "s", false, true)) ExportMap();
+                    if (igMenuItem_Bool("Exit", "Esc", false, true)) AskToLeave();
+                    if (igMenuItem_Bool("Export map", "Ctrl+s", false, true)) ExportMap();
                     
                     igEndMenu();
                 }
@@ -48,8 +62,8 @@ void DrawContextMenu(void) {
 void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_objects, ObjectCounter num_objects, Object* objects) {
     float right_panel_width = 150.0f;
     
-    igSetNextWindowPos((ImVec2){.x=GetScreenWidth() - right_panel_width, .y=0}, 1, (ImVec2){0, 0});
-    igSetNextWindowSize((ImVec2){.x=right_panel_width, .y=(float)GetScreenHeight()}, 1);
+    igSetNextWindowPos((ImVec2){.x=GetScreenWidth() - right_panel_width, .y=19}, 1, (ImVec2){0, 0});
+    igSetNextWindowSize((ImVec2){.x=right_panel_width, .y=(float)GetScreenHeight() - 19}, 1);
 
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize;
     bool show = (igBegin("Object list", NULL, windowFlags)); {
@@ -65,19 +79,6 @@ void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_
             }
         }
     } igEnd();
-}
-
-void BeginGUIDraw(void) {
-    ImGui_ImplRaylib_ProcessEvents();
-
-    /* start the Dear ImGui frame */
-    ImGui_ImplRaylib_NewFrame();
-    igNewFrame();
-}
-
-void EndGUIDraw(void) {
-    igRender();
-    ImGui_ImplRaylib_RenderDrawData(igGetDrawData());
 }
 
 void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, ObjectCounter num_objects, Object* objects) {
@@ -104,6 +105,7 @@ void InitGUI(void) {
     /* required to be called to cache the font texture with raylib */
     ImGui_ImplRaylib_BuildFontAtlas();
 }
+
 void DeInitGUI(void) { ImGui_ImplRaylib_Shutdown(); igDestroyContext(NULL); }
 
 void LockGUI(void) {  }
