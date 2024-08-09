@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <raylib.h>
+#include <rlgl.h>
 #include <rcamera.h>
 #include <raymath.h>
 
@@ -27,6 +28,8 @@ Object** selected_objects; /* Holds the addresses to the selected objects in the
 ObjectCounter num_selected_objects;
 
 ObjectMoveState move_state;
+
+float default_line_width;
 /* ---------------- */
 
 inline float vFov_from_hFov(float hFov, float aspect) {
@@ -81,6 +84,8 @@ void InitGlobal(void) {
     move_state = MS_Stationary;
 
     MapInit();
+
+    default_line_width = rlGetLineWidth();
 }
 
 void SetMapMetadata(MapMetadata new_metadata) {
@@ -239,9 +244,11 @@ void ResizeObjectSelection(void) {
 void HandleEvents(void) {
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
         cam_state = WantsToMoveFreely;
+        move_state = MS_Stationary;
         LockCursor();
     } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) & IsKeyDown(KEY_LEFT_SHIFT)) {
         cam_state = WantsToPan;
+        move_state = MS_Stationary;
         LockCursor();
     } else {
         cam_state = Static;
@@ -289,7 +296,7 @@ void HandleEvents(void) {
           but i prefer this look. If issues arise then no doubt i'll change it*/
         CameraMoveForward(cam, CAMERA_ZOOM_SPEED*mouse_wheel_delta, false);
         
-        if (IsKeyPressed(KEY_G)) {
+        if (IsKeyPressed(KEY_G) && num_selected_objects != 0) {
             move_state = MS_WantsToMoveOnX | MS_WantsToMoveOnZ;
         }
 
@@ -364,14 +371,39 @@ void CameraUpdate(void) {
     }
 }
 
+void DrawMoveHelpers(void) {
+    rlSetLineWidth(XYZLINES_THICKNESS);
+    if (move_state & MS_WantsToMoveOnX) {
+        rlBegin(RL_LINES);
+            rlColor4ub(XLINE_COLOR.r, XLINE_COLOR.g, XLINE_COLOR.b, XLINE_COLOR.a);
+            rlVertex3f(-GROUND_TOTAL_LENGTH, 0.002f, 0.0f);
+            rlVertex3f(GROUND_TOTAL_LENGTH, 0.002f, 0.0f);
+        rlEnd();
+    } if (move_state & MS_WantsToMoveOnZ) {
+        rlBegin(RL_LINES);
+            rlColor4ub(ZLINE_COLOR.r, ZLINE_COLOR.g, ZLINE_COLOR.b, ZLINE_COLOR.a);
+            rlVertex3f(0.0f, 0.002f, -GROUND_TOTAL_LENGTH);
+            rlVertex3f(0.0f, 0.002f, GROUND_TOTAL_LENGTH);
+        rlEnd();
+    } if (move_state & MS_WantsToMoveOnY) {
+        rlBegin(RL_LINES);
+            rlColor4ub(YLINE_COLOR.r, YLINE_COLOR.g, YLINE_COLOR.b, YLINE_COLOR.a);
+            rlVertex3f(0.0f, -GROUND_TOTAL_LENGTH, 0.0f);
+            rlVertex3f(0.0f, GROUND_TOTAL_LENGTH, 0.0f);
+        rlEnd();
+    }
+
+    rlSetLineWidth(default_line_width);
+}
+
 void Draw(void) {
     BeginDrawing(); {
         ClearBackground(RAYWHITE);
 
         BeginMode3D(*cam); {
-            DrawObjects();
-
             DrawGrid((int)GROUND_TOTAL_LENGTH, 1.0f);
+            DrawMoveHelpers();
+            DrawObjects();
 
         } EndMode3D();
         DrawGUI(selected_objects, &num_selected_objects, map.num_objects, map.objects);

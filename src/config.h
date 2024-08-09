@@ -24,6 +24,11 @@
 
 #define OBJECT_MOVE_SPEED 0.02f
 
+#define XYZLINES_THICKNESS 0.1f
+#define XLINE_COLOR (Color){.a=255, .r=249, .g=62,  .b=86}
+#define ZLINE_COLOR (Color){.a=255, .r=4,   .g=146, .b=90}
+#define YLINE_COLOR (Color){.a=255, .r=232, .g=193, .b=12}
+
 #define DEFAULT_MAP_NAME "new_map"
 #define DEFAULT_MAP_AUTHOR "unspecified"
 
