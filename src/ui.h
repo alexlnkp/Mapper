@@ -3,7 +3,7 @@
 
 #include "editor.h"
 
-void DrawGUI(ObjectCounter selected_object_index, Object* selected_object, ObjectCounter num_objects, Object* objects);
+void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, ObjectCounter num_objects, Object* objects);
 
 void UnlockGUI(void);
 void LockGUI(void);

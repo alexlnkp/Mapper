@@ -1,9 +1,9 @@
 #include <raygui.h>
+#include <raymath.h>
 
-#include <math.h>
 #include "ui.h"
 
-void DrawGUI(ObjectCounter selected_object_index, Object* selected_object, ObjectCounter num_objects, Object* objects) {
+void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, ObjectCounter num_objects, Object* objects) {
     /*      Right panel      */
     float right_panel_width = 80.0f;
     Rectangle right_panel = {
@@ -23,9 +23,15 @@ void DrawGUI(ObjectCounter selected_object_index, Object* selected_object, Objec
             .y=25.0f + object_entry_height * i
         };
 
-        bool active = (i == selected_object_index);
+        bool active = false;
+        for (ObjectCounter j = 0; j < *num_selected_objects; ++j) {
+            active = (selected_objects[j] == &objects[i]);
+            if (active) break;
+        }
+
         if (GuiToggle(object_entry, TextFormat("%d: (TYPE)%d", i, objects[i].type), &active)) {
-            selected_object = &objects[i];
+            selected_objects[*num_selected_objects] = &objects[i];
+            (*num_selected_objects)++;
         }
     }
 

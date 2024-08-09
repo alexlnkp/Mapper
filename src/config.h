@@ -19,7 +19,8 @@
 #define GROUND_MIN_BOUND (Vector3){-GROUND_LENGTH, 0.0f, -GROUND_LENGTH}
 #define GROUND_MAX_BOUND (Vector3){GROUND_LENGTH, 0.0f, GROUND_LENGTH}
 
-#define OBJECTS_MEMORY_RESERVE 10 /* how much objects we can reserve in advance during reallocation */
+#define OBJECTS_MEMORY_RESERVE 10 /* how many objects we can reserve in advance during reallocation */
+#define SELECTED_OBJECTS_MEMORY_RESERVE 10 /* how many selected objects we can reserve in memory in advance during reallocation */
 
 #define DEFAULT_MAP_NAME "new_map"
 #define DEFAULT_MAP_AUTHOR "unspecified"
