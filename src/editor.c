@@ -86,6 +86,8 @@ void InitGlobal(void) {
     MapInit();
 
     default_line_width = rlGetLineWidth();
+
+    InitGUI();
 }
 
 void SetMapMetadata(MapMetadata new_metadata) {
@@ -202,13 +204,13 @@ void DeInitGlobal(void) {
     FREE(cam);
     FREE(map.objects);
     FREE(selected_objects);
+    DeInitGUI();
 }
 
 void LockCursor(void) {
     /* Lock cursor (ONLY if it's unlocked) */
     if (!cursor_disabled) {
         DisableCursor();
-        DisableGUI();
         LockGUI();
         cursor_disabled = true;
     }
@@ -218,7 +220,6 @@ void UnlockCursor(void) {
     /* Unlock cursor (ONLY if it's locked) */
     if (cursor_disabled) {
         EnableCursor();
-        EnableGUI();
         UnlockGUI();
         cursor_disabled = false;
     }
@@ -262,6 +263,10 @@ void HandleEvents(void) {
         /* Handle shortcuts or whatever */
 
         Vector2 mouse_position = GetMousePosition();
+
+        if (IsKeyPressed(KEY_SPACE)) {
+            CreateCube();
+        }
 
         /*                Object selection                */
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -406,8 +411,14 @@ void Draw(void) {
             DrawObjects();
 
         } EndMode3D();
+
         DrawGUI(selected_objects, &num_selected_objects, map.num_objects, map.objects);
     } EndDrawing();
+}
+
+void AskToLeave(void) {
+    DeInitGlobal();
+    CloseWindow();
 }
 
 int main(void) {

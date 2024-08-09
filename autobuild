@@ -1,27 +1,30 @@
 #!/bin/bash
 
-_RAYGUI_URL="https://raw.githubusercontent.com/raysan5/raygui/master/src/raygui.h"
+_RLCIMGUI_H_URL="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/rlcimgui.h"
+_RLCIMGUI_C_URL="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/rlcimgui.c"
+_IM_IMPL_RL_URL="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/imgui_impl_raylib.h"
 
 _BINDIR="bin"
 _VENDOR_DIR="lib"
 
 _CSTANDART="c99"
-_CFLAGS="-Wall -Wextra -Wpedantic -O3 -std=${_CSTANDART} -I${_VENDOR_DIR} -flto -lraylib -lm"
+_CFLAGS="-Wall -Wextra -Wpedantic -O3 -std=${_CSTANDART} -I${_VENDOR_DIR} -flto -lraylib -lstdc++ -l:cimgui.a -lm"
 
 # remove annoying warnings from raygui
 _CFLAGS="${_CFLAGS} -Wno-unused-variable -Wno-unused-parameter"
 
 _CFLAGS="${_CFLAGS} -DRAYGUI_IMPLEMENTATION"
 
-_EDITOR_SOURCES="src/editor.c src/ui.c"
+_EDITOR_SOURCES="src/editor.c src/ui.c lib/rlcimgui.c"
 _MAPREADER_SOURCES="examples/readmap.c"
 
 mkdir -p ${_BINDIR}
 mkdir -p ${_VENDOR_DIR}
 
-if [[ ! -f "${_VENDOR_DIR}/raygui.h" ]]; then
-    curl ${_RAYGUI_URL} > ${_VENDOR_DIR}/raygui.h
-    patch lib/raygui.h -p1 < etc/raygui-fix.patch
+if [[ ! -f "${_VENDOR_DIR}/rlcimgui.h" ]]; then
+    curl ${_RLCIMGUI_H_URL} > ${_VENDOR_DIR}/rlcimgui.h
+    curl ${_RLCIMGUI_C_URL} > ${_VENDOR_DIR}/rlcimgui.c
+    curl ${_IM_IMPL_RL_URL} > ${_VENDOR_DIR}/imgui_impl_raylib.h
 fi
 
 # prefer gcc over tcc UNLESS `-t` is provided
@@ -39,4 +42,3 @@ strip -S -s -R .comment -R .gnu.version ${_BINDIR}/mapreader
 cloc . --exclude-dir=lib,bin,.vscode --exclude-lang='Bourne Again Shell',diff
 
 wc -c ${_BINDIR}/editor
-wc -c ${_BINDIR}/mapreader
