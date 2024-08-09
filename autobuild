@@ -39,6 +39,6 @@ fi
 strip -S -s -R .comment -R .gnu.version ${_BINDIR}/editor
 strip -S -s -R .comment -R .gnu.version ${_BINDIR}/mapreader
 
-cloc . --exclude-dir=lib,bin,.vscode --exclude-lang='Bourne Again Shell',diff
+cloc . --exclude-dir=lib,bin,.vscode,tmp --exclude-lang='Bourne Again Shell',diff,INI
 
 wc -c ${_BINDIR}/editor

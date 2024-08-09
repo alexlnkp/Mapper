@@ -1,0 +1,71 @@
+#!/bin/bash
+
+TMP_FOLDER="tmp"
+
+RAYLIB_REPO="https://github.com/raysan5/raylib.git" # tag 5.0
+CIMGUI_REPO="https://github.com/cimgui/cimgui.git"
+
+mkdir -p ${TMP_FOLDER}
+cd ${TMP_FOLDER}
+
+git clone --recursive ${RAYLIB_REPO}
+git clone --recursive ${CIMGUI_REPO}
+
+###################### RAYLIB INSTALLATION ######################
+cd raylib
+git fetch
+git checkout ae50bfa2cc569c0f8d5bc4315d39db64005b1b08
+
+cmake \
+    -B build \
+    -D BUILD_EXAMPLES=OFF \
+    -D BUILD_SHARED_LIBS=ON \
+    -D CMAKE_BUILD_TYPE=Release \
+    -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
+    -D CMAKE_INSTALL_LIBDIR=lib \
+    -D CMAKE_INSTALL_PREFIX=/usr \
+    -D OpenGL_GL_PREFERENCE=GLVND \
+    -D PLATFORM=Desktop \
+    -D USE_EXTERNAL_GLFW=OFF \
+    -D WITH_PIC=ON \
+    -G Ninja \
+    -W no-dev
+
+ninja -C build
+sudo ninja -C build install
+
+for f in rcamera rgestures; do
+    sudo install -Dm644 src/$f.h "/usr/include/$f.h"
+done
+
+sudo install -Dm644 LICENSE "/usr/share/licenses/raylib/LICENSE"
+
+cd ..
+#################################################################
+
+###################### CIMGUI INSTALLATION ######################
+
+cd cimgui
+
+cmake                                      \
+    -B build                               \
+    -D IMGUI_STATIC=ON                     \
+    -D CMAKE_BUILD_TYPE=Release            \
+    -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w"    \
+    -D CMAKE_INSTALL_PREFIX=/usr/local/lib \
+    -G Ninja                               \
+    -W no-dev
+
+ninja -C build
+sudo ninja -C build install
+
+sudo install -Dm644 LICENSE "/usr/share/licenses/cimgui/LICENSE"
+
+cd ../..
+#################################################################
+
+echo "Current dir: $PWD"
+echo "Prompting for recursive removal of $PWD/${TMP_FOLDER} folder"
+rm -r -I ${TMP_FOLDER}
+
+echo "All done!"
