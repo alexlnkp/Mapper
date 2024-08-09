@@ -25,6 +25,8 @@ Map map;
 
 Object** selected_objects; /* Holds the addresses to the selected objects in the map.objects array */
 ObjectCounter num_selected_objects;
+
+ObjectMoveState move_state;
 /* ---------------- */
 
 inline float vFov_from_hFov(float hFov, float aspect) {
@@ -75,6 +77,8 @@ void InitGlobal(void) {
 
     ground.min = GROUND_MIN_BOUND;
     ground.max = GROUND_MAX_BOUND;
+
+    move_state = MS_Stationary;
 
     MapInit();
 }
@@ -250,9 +254,12 @@ void HandleEvents(void) {
     case Static: {
         /* Handle shortcuts or whatever */
 
+        Vector2 mouse_position = GetMousePosition();
+
         /*                Object selection                */
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            ObjectCounter obj_index = GetObjectIndexUnderMouse(GetMousePosition());
+            move_state = MS_Stationary;
+            ObjectCounter obj_index = GetObjectIndexUnderMouse(mouse_position);
 
             if (IsKeyDown(KEY_LEFT_CONTROL)) {
                 /*      Multiple object selection      */
@@ -281,6 +288,32 @@ void HandleEvents(void) {
         /*Having an if (mouse_wheel_delta) before this should be technically more correct,
           but i prefer this look. If issues arise then no doubt i'll change it*/
         CameraMoveForward(cam, CAMERA_ZOOM_SPEED*mouse_wheel_delta, false);
+        
+        if (IsKeyPressed(KEY_G)) {
+            move_state = MS_WantsToMoveOnX | MS_WantsToMoveOnZ;
+        }
+
+        if (move_state != MS_Stationary) {
+            Vector2 mouse_delta = GetMouseDelta();
+
+            if (IsKeyDown(KEY_X)) {
+                move_state = MS_WantsToMoveOnX;
+            } else if (IsKeyDown(KEY_Y)) {
+                move_state = MS_WantsToMoveOnY;
+            } else if (IsKeyDown(KEY_Z)) {
+                move_state = MS_WantsToMoveOnZ;
+            }
+
+            for (ObjectCounter i = 0; i < num_selected_objects; ++i) {
+                if (move_state & MS_WantsToMoveOnX) {
+                    selected_objects[i]->pos.x += (mouse_delta.x) * OBJECT_MOVE_SPEED;
+                } if (move_state & MS_WantsToMoveOnZ) {
+                    selected_objects[i]->pos.z += (mouse_delta.y) * OBJECT_MOVE_SPEED;
+                } if (move_state & MS_WantsToMoveOnY) {
+                    selected_objects[i]->pos.y += (mouse_delta.x + -mouse_delta.y) * OBJECT_MOVE_SPEED;
+                }
+            }
+        }
 
         if (IsKeyDown(KEY_LEFT_CONTROL) & IsKeyPressed(KEY_S)) ExportMap();
 

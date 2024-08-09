@@ -44,6 +44,13 @@ typedef struct Object {
     } data;
 } Object;
 
+typedef enum {
+    MS_Stationary = 1 << 0,
+    MS_WantsToMoveOnX = 1 << 1,
+    MS_WantsToMoveOnZ = 1 << 2,
+    MS_WantsToMoveOnY = 1 << 3
+} ObjectMoveState;
+
 typedef struct MapMetadata {
     char* name;
     char* author;
