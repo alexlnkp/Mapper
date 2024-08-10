@@ -24,8 +24,13 @@ _EDITOR_SOURCES="src/editor.c src/ui.c ${_VENDOR_DIR}/rlcimgui.c"
 _MAPREADER_SOURCES="examples/readmap.c"
 
 mkdir -p ${_BINDIR}
-mkdir -p ${_VENDOR_DIR}
-mkdir -p ${_VENDOR_DIR}/include
+
+if [[ ! -d "${_VENDOR_DIR}" ]]; then
+    echo "Vendored libraries could not be found, installing now via \`dep_autoinstall\`"
+    mkdir -p ${_VENDOR_DIR}
+    mkdir -p ${_VENDOR_DIR}/include
+    ./dep_autoinstall
+fi
 
 if [[ ! -f "${_VENDOR_DIR}/include/rlcimgui.h" ]]; then
     curl ${_RLCIMGUI_H_URL} > ${_VENDOR_DIR}/include/rlcimgui.h
