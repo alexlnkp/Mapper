@@ -6,109 +6,143 @@ _RUN_DIR=${PWD}
 
 TMP_FOLDER="tmp"
 
-RAYLIB_REPO="https://github.com/raysan5/raylib.git" # tag 5.0
+RAYLIB_REPO="https://github.com/raysan5/raylib.git"
 CIMGUI_REPO="https://github.com/cimgui/cimgui.git"
 
-mkdir -p ${TMP_FOLDER}
-cd ${TMP_FOLDER}
+_RLCIMGUI_H_URL="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/rlcimgui.h"
+_RLCIMGUI_C_URL="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/rlcimgui.c"
+_IM_IMPL_RL_URL="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/imgui_impl_raylib.h"
 
-git clone --recursive ${RAYLIB_REPO}
-git clone --recursive ${CIMGUI_REPO}
+_FONT_AWESOME_H_0="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/extras/FA6FreeSolidFontData.h"
+_FONT_AWESOME_H_1="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/extras/IconsFontAwesome6.h"
+_FONT_AWESOME_LICENSE="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/extras/FontAwsome_LICENSE.txt"
+
+if [[ ! -d "${_VENDOR_DIR}" ]]; then
+    echo "Vendored libraries could not be found, installing now via \`dep_autoinstall\`"
+    mkdir -p ${_VENDOR_DIR}
+    mkdir -p ${_VENDOR_DIR}/include
+    ./dep_autoinstall
+fi
+
+if [[ ! -f "${_VENDOR_DIR}/include/rlcimgui.h" ]]; then
+    curl ${_RLCIMGUI_H_URL} > ${_VENDOR_DIR}/include/rlcimgui.h
+    curl ${_RLCIMGUI_C_URL} > ${_VENDOR_DIR}/rlcimgui.c
+    curl ${_IM_IMPL_RL_URL} > ${_VENDOR_DIR}/include/imgui_impl_raylib.h
+
+    mkdir -p ${_VENDOR_DIR}/include/extras
+    curl ${_FONT_AWESOME_H_0} > ${_VENDOR_DIR}/include/extras/FA6FreeSolidFontData.h
+    curl ${_FONT_AWESOME_H_1} > ${_VENDOR_DIR}/include/extras/IconsFontAwesome6.h
+
+    mkdir -p ${_VENDOR_DIR}/licenses/FontAwesome
+    curl ${_FONT_AWESOME_LICENSE} > ${_VENDOR_DIR}/licenses/FontAwesome/LICENSE
+fi
+
+mkdir -p ${TMP_FOLDER}
 
 ###################### RAYLIB INSTALLATION ######################
-cd raylib
-git fetch
-git checkout ae50bfa2cc569c0f8d5bc4315d39db64005b1b08
+if [[ ! -f "${_RUN_DIR}/${_VENDOR_DIR}/lib/libraylib.so" ]]; then
+    cd ${_RUN_DIR}/${TMP_FOLDER}
+    git clone --recursive ${RAYLIB_REPO}
 
-if [[ $1 = "-g" ]]; then
-    cmake \
-        -B build \
-        -D BUILD_EXAMPLES=OFF \
-        -D BUILD_SHARED_LIBS=ON \
-        -D CMAKE_BUILD_TYPE=Release \
-        -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
-        -D CMAKE_INSTALL_LIBDIR=lib \
-        -D CMAKE_INSTALL_PREFIX=/usr \
-        -D OpenGL_GL_PREFERENCE=GLVND \
-        -D PLATFORM=Desktop \
-        -D USE_EXTERNAL_GLFW=OFF \
-        -D WITH_PIC=ON \
-        -G Ninja \
-        -W no-dev
-else
-    cmake \
-        -B build \
-        -D BUILD_EXAMPLES=OFF \
-        -D BUILD_SHARED_LIBS=ON \
-        -D CMAKE_BUILD_TYPE=Release \
-        -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
-        -D CMAKE_INSTALL_LIBDIR=lib \
-        -D CMAKE_INSTALL_PREFIX="${_RUN_DIR}/${_VENDOR_DIR}" \
-        -D OpenGL_GL_PREFERENCE=GLVND \
-        -D PLATFORM=Desktop \
-        -D USE_EXTERNAL_GLFW=OFF \
-        -D WITH_PIC=ON \
-        -G Ninja \
-        -W no-dev
+    cd raylib && git fetch
+    git checkout ae50bfa2cc569c0f8d5bc4315d39db64005b1b08 # tag 5.0
+
+    if [[ $1 = "-g" ]]; then
+        cmake \
+            -B build \
+            -D BUILD_EXAMPLES=OFF \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
+            -D CMAKE_INSTALL_LIBDIR=lib \
+            -D CMAKE_INSTALL_PREFIX=/usr \
+            -D OpenGL_GL_PREFERENCE=GLVND \
+            -D PLATFORM=Desktop \
+            -D USE_EXTERNAL_GLFW=OFF \
+            -D WITH_PIC=ON \
+            -G Ninja \
+            -W no-dev
+    else
+        cmake \
+            -B build \
+            -D BUILD_EXAMPLES=OFF \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
+            -D CMAKE_INSTALL_LIBDIR=lib \
+            -D CMAKE_INSTALL_PREFIX="${_RUN_DIR}/${_VENDOR_DIR}" \
+            -D OpenGL_GL_PREFERENCE=GLVND \
+            -D PLATFORM=Desktop \
+            -D USE_EXTERNAL_GLFW=OFF \
+            -D WITH_PIC=ON \
+            -G Ninja \
+            -W no-dev
+    fi
+
+    ninja -C build
+
+    if [[ $1 = "-g" ]]; then
+        sudo ninja -C build install
+        for f in rcamera rgestures; do
+            sudo install -Dm644 src/$f.h "/usr/include/$f.h"
+        done
+
+        sudo install -Dm644 LICENSE "/usr/share/licenses/raylib/LICENSE"
+    else
+        ninja -C build install
+        for f in rcamera rgestures; do
+            install -Dm644 src/$f.h "${_RUN_DIR}/${_VENDOR_DIR}/include/$f.h"
+        done
+        install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/raylib/LICENSE"
+    fi
 fi
-
-ninja -C build
-
-
-if [[ $1 = "-g" ]]; then
-    sudo ninja -C build install
-    for f in rcamera rgestures; do
-        sudo install -Dm644 src/$f.h "/usr/include/$f.h"
-    done
-
-    sudo install -Dm644 LICENSE "/usr/share/licenses/raylib/LICENSE"
-else
-    ninja -C build install
-    for f in rcamera rgestures; do
-        install -Dm644 src/$f.h "${_RUN_DIR}/${_VENDOR_DIR}/include/$f.h"
-    done
-    install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/raylib/LICENSE"
-fi
-
-cd ..
 #################################################################
 
+
+
 ###################### CIMGUI INSTALLATION ######################
+if [[ ! -f "${_RUN_DIR}/${_VENDOR_DIR}/lib/cimgui.so" ]]; then
+    cd ${_RUN_DIR}/${TMP_FOLDER}
+    git clone --recursive ${CIMGUI_REPO}
 
-cd cimgui
+    cd cimgui
 
-if [[ $1 = "-g" ]]; then
-    cmake                                      \
-        -B build                               \
-        -D IMGUI_STATIC=OFF                    \
-        -D CMAKE_BUILD_TYPE=Release            \
-        -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w"    \
-        -D CMAKE_INSTALL_PREFIX=/usr/local/lib \
-        -G Ninja                               \
-        -W no-dev
-else
-    cmake                                      \
-        -B build                               \
-        -D IMGUI_STATIC=OFF                    \
-        -D CMAKE_BUILD_TYPE=Release            \
-        -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w"    \
-        -D CMAKE_INSTALL_PREFIX="${_RUN_DIR}/${_VENDOR_DIR}/lib" \
-        -G Ninja                               \
-        -W no-dev
+    if [[ $1 = "-g" ]]; then
+        cmake                                      \
+            -B build                               \
+            -D IMGUI_STATIC=OFF                    \
+            -D CMAKE_BUILD_TYPE=Release            \
+            -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w"    \
+            -D CMAKE_INSTALL_PREFIX=/usr/local/lib \
+            -G Ninja                               \
+            -W no-dev
+    else
+        cmake                                      \
+            -B build                               \
+            -D IMGUI_STATIC=OFF                    \
+            -D CMAKE_BUILD_TYPE=Release            \
+            -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w"    \
+            -D CMAKE_INSTALL_PREFIX="${_RUN_DIR}/${_VENDOR_DIR}/lib" \
+            -G Ninja                               \
+            -W no-dev
+    fi
+
+    ninja -C build
+
+    if [[ $1 = "-g" ]]; then
+        sudo ninja -C build install
+        sudo install -Dm644 LICENSE "/usr/share/licenses/cimgui/LICENSE"
+    else
+        ninja -C build install
+        install -Dm644 cimgui.h "${_RUN_DIR}/${_VENDOR_DIR}/include/cimgui.h"
+        install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/cimgui/LICENSE"
+    fi
+
+    cd ${_RUN_DIR}
 fi
+#################################################################
 
-ninja -C build
 
-if [[ $1 = "-g" ]]; then
-    sudo ninja -C build install
-    sudo install -Dm644 LICENSE "/usr/share/licenses/cimgui/LICENSE"
-else
-    ninja -C build install
-    install -Dm644 cimgui.h "${_RUN_DIR}/${_VENDOR_DIR}/include/cimgui.h"
-    install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/cimgui/LICENSE"
-fi
-
-cd ${_RUN_DIR}
 
 ###### Registering a library on our system so that it can (HOPEFULLY) be found #####
 if [[ $1 = "-g" ]]; then
