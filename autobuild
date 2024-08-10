@@ -8,7 +8,7 @@ _BINDIR="bin"
 _VENDOR_DIR="lib"
 
 _CSTANDART="c99"
-_CFLAGS="-Wall -Wextra -Wpedantic -O3 -std=${_CSTANDART} -I${_VENDOR_DIR} -flto -lraylib -lstdc++ -l:cimgui.a -lm"
+_CFLAGS="-Wall -Wextra -Wpedantic -O3 -std=${_CSTANDART} -I${_VENDOR_DIR} -flto -L/usr/local/lib -Wl,-R/usr/local/lib -l:cimgui.so -lraylib -lm"
 
 # remove annoying warnings from raygui
 _CFLAGS="${_CFLAGS} -Wno-unused-variable -Wno-unused-parameter"
