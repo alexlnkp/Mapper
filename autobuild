@@ -1,30 +1,36 @@
 #!/bin/bash
 
+. etc/shared_config
+
 _RLCIMGUI_H_URL="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/rlcimgui.h"
 _RLCIMGUI_C_URL="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/rlcimgui.c"
 _IM_IMPL_RL_URL="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/imgui_impl_raylib.h"
 
 _BINDIR="bin"
-_VENDOR_DIR="lib"
 
 _CSTANDART="c99"
-_CFLAGS="-Wall -Wextra -Wpedantic -O3 -std=${_CSTANDART} -I${_VENDOR_DIR} -flto -L/usr/local/lib -Wl,-R/usr/local/lib -l:cimgui.so -lraylib -lm"
+_CFLAGS="-Wall -Wextra -O3 -std=${_CSTANDART} -flto -l:cimgui.so -lraylib -lm"
+
+# vendor includes and libs
+_CFLAGS="${_CFLAGS} -I${_VENDOR_DIR}/include"
+_CFLAGS="${_CFLAGS} -L${_VENDOR_DIR}/lib -Wl,-R${_VENDOR_DIR}/lib"
 
 # remove annoying warnings from raygui
 _CFLAGS="${_CFLAGS} -Wno-unused-variable -Wno-unused-parameter"
 
 _CFLAGS="${_CFLAGS} -DRAYGUI_IMPLEMENTATION"
 
-_EDITOR_SOURCES="src/editor.c src/ui.c lib/rlcimgui.c"
+_EDITOR_SOURCES="src/editor.c src/ui.c ${_VENDOR_DIR}/rlcimgui.c"
 _MAPREADER_SOURCES="examples/readmap.c"
 
 mkdir -p ${_BINDIR}
 mkdir -p ${_VENDOR_DIR}
+mkdir -p ${_VENDOR_DIR}/include
 
-if [[ ! -f "${_VENDOR_DIR}/rlcimgui.h" ]]; then
-    curl ${_RLCIMGUI_H_URL} > ${_VENDOR_DIR}/rlcimgui.h
+if [[ ! -f "${_VENDOR_DIR}/include/rlcimgui.h" ]]; then
+    curl ${_RLCIMGUI_H_URL} > ${_VENDOR_DIR}/include/rlcimgui.h
     curl ${_RLCIMGUI_C_URL} > ${_VENDOR_DIR}/rlcimgui.c
-    curl ${_IM_IMPL_RL_URL} > ${_VENDOR_DIR}/imgui_impl_raylib.h
+    curl ${_IM_IMPL_RL_URL} > ${_VENDOR_DIR}/include/imgui_impl_raylib.h
 fi
 
 # prefer gcc over tcc UNLESS `-t` is provided
@@ -39,6 +45,6 @@ fi
 strip -S -s -R .comment -R .gnu.version ${_BINDIR}/editor
 strip -S -s -R .comment -R .gnu.version ${_BINDIR}/mapreader
 
-cloc . --exclude-dir=lib,bin,.vscode,tmp --exclude-lang='Bourne Again Shell',diff,INI
+cloc . --exclude-dir=${_VENDOR_DIR},bin,.vscode,tmp --exclude-lang='Bourne Again Shell',diff,INI
 
 wc -c ${_BINDIR}/editor

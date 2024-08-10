@@ -1,5 +1,9 @@
 #!/bin/bash
 
+_RUN_DIR=${PWD}
+
+. etc/shared_config
+
 TMP_FOLDER="tmp"
 
 RAYLIB_REPO="https://github.com/raysan5/raylib.git" # tag 5.0
@@ -16,29 +20,55 @@ cd raylib
 git fetch
 git checkout ae50bfa2cc569c0f8d5bc4315d39db64005b1b08
 
-cmake \
-    -B build \
-    -D BUILD_EXAMPLES=OFF \
-    -D BUILD_SHARED_LIBS=ON \
-    -D CMAKE_BUILD_TYPE=Release \
-    -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
-    -D CMAKE_INSTALL_LIBDIR=lib \
-    -D CMAKE_INSTALL_PREFIX=/usr \
-    -D OpenGL_GL_PREFERENCE=GLVND \
-    -D PLATFORM=Desktop \
-    -D USE_EXTERNAL_GLFW=OFF \
-    -D WITH_PIC=ON \
-    -G Ninja \
-    -W no-dev
+if [[ $1 = "-g" ]]; then
+    cmake \
+        -B build \
+        -D BUILD_EXAMPLES=OFF \
+        -D BUILD_SHARED_LIBS=ON \
+        -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
+        -D CMAKE_INSTALL_LIBDIR=lib \
+        -D CMAKE_INSTALL_PREFIX=/usr \
+        -D OpenGL_GL_PREFERENCE=GLVND \
+        -D PLATFORM=Desktop \
+        -D USE_EXTERNAL_GLFW=OFF \
+        -D WITH_PIC=ON \
+        -G Ninja \
+        -W no-dev
+else
+    cmake \
+        -B build \
+        -D BUILD_EXAMPLES=OFF \
+        -D BUILD_SHARED_LIBS=ON \
+        -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
+        -D CMAKE_INSTALL_LIBDIR=lib \
+        -D CMAKE_INSTALL_PREFIX="${_RUN_DIR}/${_VENDOR_DIR}" \
+        -D OpenGL_GL_PREFERENCE=GLVND \
+        -D PLATFORM=Desktop \
+        -D USE_EXTERNAL_GLFW=OFF \
+        -D WITH_PIC=ON \
+        -G Ninja \
+        -W no-dev
+fi
 
 ninja -C build
-sudo ninja -C build install
 
-for f in rcamera rgestures; do
-    sudo install -Dm644 src/$f.h "/usr/include/$f.h"
-done
 
-sudo install -Dm644 LICENSE "/usr/share/licenses/raylib/LICENSE"
+if [[ $1 = "-g" ]]; then
+    sudo ninja -C build install
+    for f in rcamera rgestures; do
+        sudo install -Dm644 src/$f.h "/usr/include/$f.h"
+    done
+
+    sudo install -Dm644 LICENSE "/usr/share/licenses/raylib/LICENSE"
+else
+    ninja -C build install
+    for f in rcamera rgestures; do
+        install -Dm644 src/$f.h "${_RUN_DIR}/${_VENDOR_DIR}/include/$f.h"
+    done
+    install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/raylib/LICENSE"
+fi
 
 cd ..
 #################################################################
@@ -47,29 +77,48 @@ cd ..
 
 cd cimgui
 
-cmake                                      \
-    -B build                               \
-    -D IMGUI_STATIC=OFF                    \
-    -D CMAKE_BUILD_TYPE=Release            \
-    -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w"    \
-    -D CMAKE_INSTALL_PREFIX=/usr/local/lib \
-    -G Ninja                               \
-    -W no-dev
+if [[ $1 = "-g" ]]; then
+    cmake                                      \
+        -B build                               \
+        -D IMGUI_STATIC=OFF                    \
+        -D CMAKE_BUILD_TYPE=Release            \
+        -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w"    \
+        -D CMAKE_INSTALL_PREFIX=/usr/local/lib \
+        -G Ninja                               \
+        -W no-dev
+else
+    cmake                                      \
+        -B build                               \
+        -D IMGUI_STATIC=OFF                    \
+        -D CMAKE_BUILD_TYPE=Release            \
+        -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w"    \
+        -D CMAKE_INSTALL_PREFIX="${_RUN_DIR}/${_VENDOR_DIR}/lib" \
+        -G Ninja                               \
+        -W no-dev
+fi
 
 ninja -C build
-sudo ninja -C build install
 
-sudo install -Dm644 LICENSE "/usr/share/licenses/cimgui/LICENSE"
+if [[ $1 = "-g" ]]; then
+    sudo ninja -C build install
+    sudo install -Dm644 LICENSE "/usr/share/licenses/cimgui/LICENSE"
+else
+    ninja -C build install
+    install -Dm644 cimgui.h "${_RUN_DIR}/${_VENDOR_DIR}/include/cimgui.h"
+    install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/cimgui/LICENSE"
+fi
 
-cd ../..
+cd ${_RUN_DIR}
 
 ###### Registering a library on our system so that it can (HOPEFULLY) be found #####
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
-sudo ldconfig
+if [[ $1 = "-g" ]]; then
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
+    sudo ldconfig
+fi
 ####################################################################################
 
 echo "Current dir: $PWD"
-echo "Prompting for recursive removal of $PWD/${TMP_FOLDER} folder"
+echo "Prompting for recursive removal of ${_RUN_DIR}/${TMP_FOLDER} folder"
 rm -r -I ${TMP_FOLDER}
 
 echo "All done!"
