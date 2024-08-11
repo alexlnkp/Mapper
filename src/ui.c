@@ -61,12 +61,22 @@ void DrawContextMenu(void) {
 
 void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_objects, ObjectCounter num_objects, Object* objects) {
     float right_panel_width = 150.0f;
-    
-    igSetNextWindowPos((ImVec2){.x=GetScreenWidth() - right_panel_width, .y=19}, 1, (ImVec2){0, 0});
-    igSetNextWindowSize((ImVec2){.x=right_panel_width, .y=(float)GetScreenHeight() - 19}, 1);
 
-    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize;
+    ImVec2 cur_window_size;
+
+    igSetNextWindowPos((ImVec2){.x=GetScreenWidth() - right_panel_width, .y=19}, ImGuiCond_FirstUseEver, (ImVec2){0, 0});
+    igSetNextWindowSize((ImVec2){.x=right_panel_width, .y=(float)GetScreenHeight() - 19}, ImGuiCond_FirstUseEver);
+
+    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_DockNodeHost | ImGuiWindowFlags_NoCollapse;
+
+    /* that's so stupid i literally can't even comprehend why there's no better alternative in the imgui itself */
+    igPushStyleColor_U32(ImGuiCol_ResizeGrip, 0);
+
     bool show = (igBegin("Object list", NULL, windowFlags)); {
+        igGetWindowSize(&cur_window_size);
+        igSetWindowSize_Vec2((ImVec2){cur_window_size.x, (float)GetScreenHeight() - 19}, 0);
+        igSetWindowPos_Vec2((ImVec2){.x=GetScreenWidth() - cur_window_size.x, .y=19}, 0);
+
         for (ObjectCounter i = 0; i < num_objects; ++i) {
             bool active = false;
             for (ObjectCounter j = 0; j < *num_selected_objects; ++j) {
