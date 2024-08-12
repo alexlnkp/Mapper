@@ -2,7 +2,7 @@
 
 _RUN_DIR=${PWD}
 
-. etc/shared_config
+_VENDOR_DIR="vendor"
 
 TMP_FOLDER="tmp"
 
