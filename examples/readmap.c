@@ -7,11 +7,11 @@
 
 const char* GetObjectType(ObjectType type) {
     switch (type) {
-    case CUBE: {
+    case OT_Cube: {
         return "Cube";
     }
 
-    case SPHERE: {
+    case OT_Sphere: {
         return "Sphere";
     }
 

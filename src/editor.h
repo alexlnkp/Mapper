@@ -21,16 +21,16 @@ void ExportMap(void);
 void CameraUpdate(void);
 
 typedef enum CameraState {
-    Static,
-    WantsToMoveFreely,
-    WantsToPan
+    CS_Static,
+    CS_WantsToMoveFreely,
+    CS_WantsToPan
 } CameraState;
 
 typedef unsigned ObjectCounter;
 
 typedef enum ObjType {
-    CUBE,
-    SPHERE
+    OT_Cube,
+    OT_Sphere
 } ObjectType;
 
 typedef struct Object {
@@ -49,10 +49,10 @@ typedef struct Object {
 } Object;
 
 typedef enum {
-    MS_Stationary = 1 << 0,
-    MS_WantsToMoveOnX = 1 << 1,
-    MS_WantsToMoveOnZ = 1 << 2,
-    MS_WantsToMoveOnY = 1 << 3
+    OMS_Stationary = 1 << 0,
+    OMS_WantsToMoveOnX = 1 << 1,
+    OMS_WantsToMoveOnZ = 1 << 2,
+    OMS_WantsToMoveOnY = 1 << 3
 } ObjectMoveState;
 
 typedef struct MapMetadata {

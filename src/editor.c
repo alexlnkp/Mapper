@@ -44,7 +44,7 @@ void CameraInit(void) {
     cam->fovy = vFov_from_hFov(CAMERA_FOV, ((float)WINDOW_WIDTH / (float)WINDOW_HEIGHT));
     cam->projection = CAMERA_PERSPECTIVE;
 
-    cam_state = Static;
+    cam_state = CS_Static;
     cam_speed = CAMERA_MOVE_SPEED;
 }
 
@@ -81,7 +81,7 @@ void InitGlobal(void) {
     ground.min = GROUND_MIN_BOUND;
     ground.max = GROUND_MAX_BOUND;
 
-    move_state = MS_Stationary;
+    move_state = OMS_Stationary;
 
     MapInit();
 
@@ -125,7 +125,7 @@ void CreateCube(void) {
         Vector3 col_point = ground_collision.point;
         Object new_cube = {
             .pos = (Vector3){col_point.x, col_point.y + 0.5f, col_point.z},
-            .type = CUBE,
+            .type = OT_Cube,
             .data.Cube = {
                 .dim = (Vector3){1.0f, 1.0f, 1.0f}
             },
@@ -155,14 +155,14 @@ ObjectCounter GetObjectIndexUnderMouse(Vector2 mousePosition) {
         RayCollision obj_collision;
 
         switch(cur_obj.type) {
-        case CUBE: {
+        case OT_Cube: {
             BoundingBox cube_bb = {
                 .min = Vector3Subtract(cur_obj.pos, Vector3Scale(cur_obj.data.Cube.dim, 0.5f)),
                 .max = Vector3Add(cur_obj.pos, Vector3Scale(cur_obj.data.Cube.dim, 0.5f))
             };
             obj_collision = GetRayCollisionBox(ray, cube_bb);
         } break;
-        case SPHERE: {
+        case OT_Sphere: {
             obj_collision = GetRayCollisionSphere(ray, cur_obj.pos, cur_obj.data.Sphere.radius);
         } break;
 
@@ -184,7 +184,7 @@ void DrawObjects(void) {
         Object cur_obj = map.objects[i];
 
         switch (cur_obj.type) {
-        case CUBE: {
+        case OT_Cube: {
             Vector3 _dim = cur_obj.data.Cube.dim;
             for (ObjectCounter j = 0; j < num_selected_objects; ++j) {
                 if (selected_objects[j] == &map.objects[i]) {
@@ -244,22 +244,22 @@ void ResizeObjectSelection(void) {
 
 void HandleEvents(void) {
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-        cam_state = WantsToMoveFreely;
-        move_state = MS_Stationary;
+        cam_state = CS_WantsToMoveFreely;
+        move_state = OMS_Stationary;
         LockCursor();
     } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) & IsKeyDown(KEY_LEFT_SHIFT)) {
-        cam_state = WantsToPan;
-        move_state = MS_Stationary;
+        cam_state = CS_WantsToPan;
+        move_state = OMS_Stationary;
         LockCursor();
     } else {
-        cam_state = Static;
+        cam_state = CS_Static;
         UnlockCursor();
     }
 
     cam_speed = (IsKeyDown(KEY_LEFT_SHIFT)) ? CAMERA_MAX_SPEED : CAMERA_MOVE_SPEED;
 
     switch(cam_state) {
-    case Static: {
+    case CS_Static: {
         /* Handle shortcuts or whatever */
 
         Vector2 mouse_position = GetMousePosition();
@@ -270,7 +270,7 @@ void HandleEvents(void) {
 
         /*                Object selection                */
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            move_state = MS_Stationary;
+            move_state = OMS_Stationary;
             ObjectCounter obj_index = GetObjectIndexUnderMouse(mouse_position);
 
             if (IsKeyDown(KEY_LEFT_CONTROL)) {
@@ -302,26 +302,26 @@ void HandleEvents(void) {
         CameraMoveForward(cam, CAMERA_ZOOM_SPEED*mouse_wheel_delta, false);
         
         if (IsKeyPressed(KEY_G) && num_selected_objects != 0) {
-            move_state = MS_WantsToMoveOnX | MS_WantsToMoveOnZ;
+            move_state = OMS_WantsToMoveOnX | OMS_WantsToMoveOnZ;
         }
 
-        if (move_state != MS_Stationary) {
+        if (move_state != OMS_Stationary) {
             Vector2 mouse_delta = GetMouseDelta();
 
             if (IsKeyDown(KEY_X)) {
-                move_state = MS_WantsToMoveOnX;
+                move_state = OMS_WantsToMoveOnX;
             } else if (IsKeyDown(KEY_Y)) {
-                move_state = MS_WantsToMoveOnY;
+                move_state = OMS_WantsToMoveOnY;
             } else if (IsKeyDown(KEY_Z)) {
-                move_state = MS_WantsToMoveOnZ;
+                move_state = OMS_WantsToMoveOnZ;
             }
 
             for (ObjectCounter i = 0; i < num_selected_objects; ++i) {
-                if (move_state & MS_WantsToMoveOnX) {
+                if (move_state & OMS_WantsToMoveOnX) {
                     selected_objects[i]->pos.x += (mouse_delta.x) * OBJECT_MOVE_SPEED;
-                } if (move_state & MS_WantsToMoveOnZ) {
+                } if (move_state & OMS_WantsToMoveOnZ) {
                     selected_objects[i]->pos.z += (mouse_delta.y) * OBJECT_MOVE_SPEED;
-                } if (move_state & MS_WantsToMoveOnY) {
+                } if (move_state & OMS_WantsToMoveOnY) {
                     selected_objects[i]->pos.y += (mouse_delta.x + -mouse_delta.y) * OBJECT_MOVE_SPEED;
                 }
             }
@@ -331,7 +331,7 @@ void HandleEvents(void) {
 
     } break;
 
-    case WantsToMoveFreely: {
+    case CS_WantsToMoveFreely: {
         /* Handle camera movement for free cam */
 
         char z = IsKeyDown(KEY_W) - IsKeyDown(KEY_S);
@@ -356,12 +356,12 @@ void CameraUpdate(void) {
         const Vector2 mouseDelta = GetMouseDelta();
 
         switch (cam_state) {
-        case WantsToMoveFreely: {
+        case CS_WantsToMoveFreely: {
             CameraYaw(cam, -mouseDelta.x*CAMERA_MOUSE_SENSITIVITY, false);
             CameraPitch(cam, -mouseDelta.y*CAMERA_MOUSE_SENSITIVITY, true, false, false);
         } break;
 
-        case WantsToPan: {
+        case CS_WantsToPan: {
             if (mouseDelta.x != 0.0f) {
                 CameraMoveRight(cam, CAMERA_PAN_SPEED * mouseDelta.x, false);
             }
@@ -378,19 +378,19 @@ void CameraUpdate(void) {
 
 void DrawMoveHelpers(void) {
     rlSetLineWidth(XYZLINES_THICKNESS);
-    if (move_state & MS_WantsToMoveOnX) {
+    if (move_state & OMS_WantsToMoveOnX) {
         rlBegin(RL_LINES);
             rlColor4ub(XLINE_COLOR.r, XLINE_COLOR.g, XLINE_COLOR.b, XLINE_COLOR.a);
             rlVertex3f(-GROUND_TOTAL_LENGTH, 0.002f, 0.0f);
             rlVertex3f(GROUND_TOTAL_LENGTH, 0.002f, 0.0f);
         rlEnd();
-    } if (move_state & MS_WantsToMoveOnZ) {
+    } if (move_state & OMS_WantsToMoveOnZ) {
         rlBegin(RL_LINES);
             rlColor4ub(ZLINE_COLOR.r, ZLINE_COLOR.g, ZLINE_COLOR.b, ZLINE_COLOR.a);
             rlVertex3f(0.0f, 0.002f, -GROUND_TOTAL_LENGTH);
             rlVertex3f(0.0f, 0.002f, GROUND_TOTAL_LENGTH);
         rlEnd();
-    } if (move_state & MS_WantsToMoveOnY) {
+    } if (move_state & OMS_WantsToMoveOnY) {
         rlBegin(RL_LINES);
             rlColor4ub(YLINE_COLOR.r, YLINE_COLOR.g, YLINE_COLOR.b, YLINE_COLOR.a);
             rlVertex3f(0.0f, -GROUND_TOTAL_LENGTH, 0.0f);
