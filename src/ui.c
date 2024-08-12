@@ -4,6 +4,7 @@
 #include "rlcimgui.h"
 #include <cimgui.h>
 
+#include "config.h"
 #include "ui.h"
 
 const char* GetObjectTypeString(ObjectType type) {
@@ -18,6 +19,9 @@ const char* GetObjectTypeString(ObjectType type) {
 }
 
 void MakeDockSpace(void) {
+    /* Code here is heavily based on this example:
+        https://gist.github.com/moebiussurfing/8dbc7fef5964adcd29428943b78e45d2
+    */
     static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 
     // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
@@ -51,25 +55,15 @@ void MakeDockSpace(void) {
     // DockSpace
     ImGuiIO* io = igGetIO();
     if (io->ConfigFlags & ImGuiConfigFlags_DockingEnable) {
-        ImGuiID dockspace_id = igGetID_Str("MyDockSpace");
+        ImGuiID dockspace_id = igGetID_Str("DockSpace");
         igDockSpace(dockspace_id, (ImVec2){0.0f, 0.0f}, dockspace_flags, ImGuiWindowClass_ImGuiWindowClass());
 
-        static bool first_time = true;
-        if (first_time) {
-            first_time = false;
-
+        /* Specifying default layout */
+        if (igDockBuilderGetNode(dockspace_id) == NULL) {
+            igDockBuilderRemoveNode(dockspace_id); // clear any previous layout
             igDockBuilderAddNode(dockspace_id, dockspace_flags | ImGuiDockNodeFlags_DockSpace);
             igDockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
-            // split the dockspace into 2 nodes -- DockBuilderSplitNode takes in the following args in the following order
-            //   window ID to split, direction, fraction (between 0 and 1), the final two setting let's us choose which id we want (which ever one we DON'T set as NULL, will be returned by the function)
-            //                                                              out_id_at_dir is the id of the node in the direction we specified earlier, out_id_at_opposite_dir is in the opposite direction
-            ImGuiID dock_id_left = igDockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, NULL, &dockspace_id);
-            ImGuiID dock_id_down = igDockBuilderSplitNode(dockspace_id, ImGuiDir_Down, 0.25f, NULL, &dockspace_id);
-
-            // we now dock our windows into the docking node we made above
-            igDockBuilderDockWindow("Down", dock_id_down);
-            igDockBuilderDockWindow("Left", dock_id_left);
             igDockBuilderFinish(dockspace_id);
         }
     }
@@ -92,12 +86,14 @@ void DrawContextMenu(void) {
     if (igBeginMenuBar()) {
         if (igBeginMenu("File", true)) {
             if (igMenuItem_Bool("Exit", "Esc", false, true)) AskToLeave();
-            if (igMenuItem_Bool("Export map", "Ctrl+s", false, true)) ExportMap();
+            if (igMenuItem_Bool("Export map", "Ctrl+S", false, true)) ExportMap();
             
             igEndMenu();
         }
         if (igBeginMenu("Create", true)) {
-            if (igMenuItem_Bool("Cube", "C", false, true)) CreateCube();
+            if (igMenuItem_Bool("Cube", "Shift+C", false, true)) CreateCube();
+            if (igMenuItem_Bool("Sphere", "Shift+P", false, true)) CreateSphere();
+
             igEndMenu();
         }
 
@@ -130,7 +126,64 @@ void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selecte
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse;
 
     bool show = (igBegin("Object context menu", NULL, windowFlags)); {
-        
+        if (*num_selected_objects > 0) {
+            if (*num_selected_objects < 2) {
+                ObjectCounter cur_obj_idx = *num_selected_objects - 1;
+
+                float new_x = selected_objects[cur_obj_idx]->pos.x;
+                float new_y = selected_objects[cur_obj_idx]->pos.y;
+                float new_z = selected_objects[cur_obj_idx]->pos.z;
+
+                igLabelText("", "%s", "Position");
+
+                if (igDragFloat("X", &new_x, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
+                    selected_objects[cur_obj_idx]->pos.x = new_x;
+                
+                if (igDragFloat("Y", &new_y, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
+                    selected_objects[cur_obj_idx]->pos.y = new_y;
+                
+                if (igDragFloat("Z", &new_z, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
+                    selected_objects[cur_obj_idx]->pos.z = new_z;
+                
+                int current_obj_type = selected_objects[cur_obj_idx]->type;
+                if (igCombo_Str_arr("Type", &current_obj_type, obj_types, sizeof(obj_types) / sizeof(obj_types[0]), 0)) {
+                    selected_objects[cur_obj_idx]->type = current_obj_type;
+                }
+
+                igLabelText("", "%s", "Type-specific vars");
+                
+                switch (selected_objects[cur_obj_idx]->type) {
+                case OT_Cube: {
+                    float new_dim_x = selected_objects[cur_obj_idx]->data.Cube.dim.x;
+                    float new_dim_y = selected_objects[cur_obj_idx]->data.Cube.dim.y;
+                    float new_dim_z = selected_objects[cur_obj_idx]->data.Cube.dim.z;
+
+                    if (igDragFloat("Width", &new_dim_x, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
+                        selected_objects[cur_obj_idx]->data.Cube.dim.x = new_dim_x;
+                    
+                    if (igDragFloat("Height", &new_dim_y, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
+                        selected_objects[cur_obj_idx]->data.Cube.dim.y = new_dim_y;
+                    
+                    if (igDragFloat("Length", &new_dim_z, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
+                        selected_objects[cur_obj_idx]->data.Cube.dim.z = new_dim_z;
+
+                } break;
+
+                case OT_Sphere: {
+                    float new_radius = selected_objects[cur_obj_idx]->data.Sphere.radius;
+                    if (igDragFloat("Radius", &new_radius, 0.01f, 0.0f, GROUND_TOTAL_LENGTH / 2, "%f", 0))
+                        selected_objects[cur_obj_idx]->data.Sphere.radius = new_radius;
+
+                } break;
+
+                default: {} break;
+
+                }
+
+            } else {
+
+            }
+        }
     } igEnd();
 }
 

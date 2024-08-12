@@ -14,6 +14,7 @@ void HandleEvents(void);
 void Update(void);
 void Draw(void);
 
+void CreateSphere(void);
 void CreateCube(void);
 
 void ExportMap(void);
@@ -32,6 +33,8 @@ typedef enum ObjType {
     OT_Cube,
     OT_Sphere
 } ObjectType;
+
+static const char* obj_types[] = {"Cube", "Sphere"};
 
 typedef struct Object {
     Vector3 pos; /* Center point of the object in the world space */

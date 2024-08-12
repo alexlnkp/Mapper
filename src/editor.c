@@ -114,6 +114,38 @@ void ExportMap(void) {
     fclose(fp);
 }
 
+void CreateSphere(void) {
+    Ray ray;
+    ray.position = cam->position;
+    ray.direction = GetCameraForward(cam);
+
+    RayCollision ground_collision = GetRayCollisionBox(ray, ground);
+
+    if (ground_collision.hit) {
+        Vector3 col_point = ground_collision.point;
+        Object new_sphere = {
+            .pos = (Vector3){col_point.x, col_point.y + 0.5f, col_point.z},
+            .type = OT_Sphere,
+            .data.Sphere = {
+                .radius = 0.5f
+            },
+            .col = RED
+        };
+
+        if ((map.num_objects + 1) % OBJECTS_MEMORY_RESERVE == 0) {
+            REALLOC(map.objects, sizeof(Object) * (map.num_objects + OBJECTS_MEMORY_RESERVE));
+            TraceLog(LOG_DEBUG, "Realloc'd for %d more objects! Objects total: %d", OBJECTS_MEMORY_RESERVE, map.num_objects + 1);
+
+            for (ObjectCounter i = map.num_objects; i < (map.num_objects + OBJECTS_MEMORY_RESERVE); ++i) {
+                map.objects[i] = (Object){0};
+            }
+        }
+
+        map.objects[map.num_objects] = new_sphere;
+        map.num_objects++;
+    }
+}
+
 void CreateCube(void) {
     Ray ray;
     ray.position = cam->position;
@@ -195,6 +227,10 @@ void DrawObjects(void) {
             DrawCube(cur_obj.pos, _dim.x, _dim.y, _dim.z, cur_obj.col);
         } break;
 
+        case OT_Sphere: {
+            DrawSphere(cur_obj.pos, cur_obj.data.Sphere.radius, cur_obj.col);
+        } break;
+
         default: {} break;
         }
     }
@@ -267,10 +303,6 @@ void HandleEvents(void) {
 
         if (!IsHoveringOverAnyGUIElement()) {
             Vector2 mouse_position = GetMousePosition();
-
-            if (IsKeyPressed(KEY_SPACE)) {
-                CreateCube();
-            }
 
             /*                Object selection                */
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
