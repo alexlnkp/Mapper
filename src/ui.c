@@ -164,5 +164,9 @@ void InitGUI(void) {
 
 void DeInitGUI(void) { ImGui_ImplRaylib_Shutdown(); igDestroyContext(NULL); }
 
+bool IsHoveringOverAnyGUIElement(void) {
+    return igIsWindowHovered(ImGuiHoveredFlags_AnyWindow);
+}
+
 void LockGUI(void) {  }
 void UnlockGUI(void) {  }

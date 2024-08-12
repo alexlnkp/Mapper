@@ -243,67 +243,73 @@ void ResizeObjectSelection(void) {
 }
 
 void HandleEvents(void) {
-    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-        cam_state = CS_WantsToMoveFreely;
-        move_state = OMS_Stationary;
-        LockCursor();
-    } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) & IsKeyDown(KEY_LEFT_SHIFT)) {
-        cam_state = CS_WantsToPan;
-        move_state = OMS_Stationary;
-        LockCursor();
-    } else {
-        cam_state = CS_Static;
-        UnlockCursor();
-    }
+    if (!IsHoveringOverAnyGUIElement()) {
+        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+            cam_state = CS_WantsToMoveFreely;
+            move_state = OMS_Stationary;
+            LockCursor();
+        } else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) & IsKeyDown(KEY_LEFT_SHIFT)) {
+            cam_state = CS_WantsToPan;
+            move_state = OMS_Stationary;
+            LockCursor();
+        } else {
+            cam_state = CS_Static;
+            UnlockCursor();
+        }
 
-    cam_speed = (IsKeyDown(KEY_LEFT_SHIFT)) ? CAMERA_MAX_SPEED : CAMERA_MOVE_SPEED;
+        cam_speed = (IsKeyDown(KEY_LEFT_SHIFT)) ? CAMERA_MAX_SPEED : CAMERA_MOVE_SPEED;
+
+    }
 
     switch(cam_state) {
     case CS_Static: {
         /* Handle shortcuts or whatever */
 
-        Vector2 mouse_position = GetMousePosition();
+        if (!IsHoveringOverAnyGUIElement()) {
+            Vector2 mouse_position = GetMousePosition();
 
-        if (IsKeyPressed(KEY_SPACE)) {
-            CreateCube();
-        }
-
-        /*                Object selection                */
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            move_state = OMS_Stationary;
-            ObjectCounter obj_index = GetObjectIndexUnderMouse(mouse_position);
-
-            if (IsKeyDown(KEY_LEFT_CONTROL)) {
-                /*      Multiple object selection      */
-                if (obj_index != (ObjectCounter)-1) {
-                    /* User clicked on an object */
-                    ResizeObjectSelection();
-                    selected_objects[num_selected_objects] = &map.objects[obj_index];
-                    num_selected_objects++;
-                }
-                /* ----------------------------------- */
-            } else {
-                /*       Single object selection       */
-                EmptyObjectSelection();
-                if (obj_index != (ObjectCounter)-1) {
-                    /* User clicked on an object */
-                    selected_objects[num_selected_objects] = &map.objects[obj_index];
-                    num_selected_objects++; /* Should set it to 1 ideally, not sure if that's a foolproof idea though */
-                }
-                /* ----------------------------------- */
+            if (IsKeyPressed(KEY_SPACE)) {
+                CreateCube();
             }
 
-        }
-        /* ---------------------------------------------- */
+            /*                Object selection                */
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                ObjectCounter obj_index = GetObjectIndexUnderMouse(mouse_position);
 
-        float mouse_wheel_delta = GetMouseWheelMove();
-        /*Having an if (mouse_wheel_delta) before this should be technically more correct,
-          but i prefer this look. If issues arise then no doubt i'll change it*/
-        CameraMoveForward(cam, CAMERA_ZOOM_SPEED*mouse_wheel_delta, false);
-        
-        if (IsKeyPressed(KEY_G) && num_selected_objects != 0) {
-            move_state = OMS_WantsToMoveOnX | OMS_WantsToMoveOnZ;
+                if (IsKeyDown(KEY_LEFT_CONTROL)) {
+                    /*      Multiple object selection      */
+                    if (obj_index != (ObjectCounter)-1) {
+                        /* User clicked on an object */
+                        ResizeObjectSelection();
+                        selected_objects[num_selected_objects] = &map.objects[obj_index];
+                        num_selected_objects++;
+                    }
+                    /* ----------------------------------- */
+                } else {
+                    /*       Single object selection       */
+                    EmptyObjectSelection();
+                    if (obj_index != (ObjectCounter)-1) {
+                        /* User clicked on an object */
+                        selected_objects[num_selected_objects] = &map.objects[obj_index];
+                        num_selected_objects++; /* Should set it to 1 ideally, not sure if that's a foolproof idea though */
+                    }
+                    /* ----------------------------------- */
+                }
+
+            }
+            /* ---------------------------------------------- */
+
+            float mouse_wheel_delta = GetMouseWheelMove();
+            /*Having an if (mouse_wheel_delta) before this should be technically more correct,
+            but i prefer this look. If issues arise then no doubt i'll change it*/
+            CameraMoveForward(cam, CAMERA_ZOOM_SPEED*mouse_wheel_delta, false);
+            
+            if (IsKeyPressed(KEY_G) && num_selected_objects != 0) {
+                move_state = OMS_WantsToMoveOnX | OMS_WantsToMoveOnZ;
+            }
         }
+
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) move_state = OMS_Stationary;
 
         if (move_state != OMS_Stationary) {
             Vector2 mouse_delta = GetMouseDelta();
