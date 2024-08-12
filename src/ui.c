@@ -58,7 +58,6 @@ void MakeDockSpace(void) {
         if (first_time) {
             first_time = false;
 
-            igDockBuilderRemoveNode(dockspace_id); // clear any previous layout
             igDockBuilderAddNode(dockspace_id, dockspace_flags | ImGuiDockNodeFlags_DockSpace);
             igDockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
