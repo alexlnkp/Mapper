@@ -11,6 +11,8 @@
 
 #include "funkymacros.h"
 
+ImFont* main_font;
+
 const char* GetObjectTypeString(ObjectType type) {
     switch (type) {
     case OT_Cube: return "Cube";
@@ -232,10 +234,12 @@ void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selecte
 
 void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, ObjectCounter num_objects, Object* objects) {
     BeginGUIDraw(); {
+        igPushFont(main_font);
         MakeDockSpace();
         DrawObjectListPanel(selected_objects, num_selected_objects, num_objects, objects);
         DrawObjectContextMenu(selected_objects, num_selected_objects);
         DrawContextMenu();
+        igPopFont();
     } EndGUIDraw();
 }
 
@@ -243,7 +247,7 @@ void InitGUI(void) {
     rligSetup(true);
 
     igCreateContext(NULL);
-    ImGuiIO *ioptr = igGetIO();
+    ImGuiIO* ioptr = igGetIO();
 
 #ifdef IMGUI_HAS_DOCK
     ioptr->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -251,6 +255,18 @@ void InitGUI(void) {
 
     ImGui_ImplRaylib_Init();
     ImFontAtlas_AddFontDefault(ioptr->Fonts, NULL);
+    ImFontConfig* font_cfg = ImFontConfig_ImFontConfig();
+    font_cfg->OversampleH = 1;
+    font_cfg->OversampleV = 1;
+    font_cfg->PixelSnapH = true;
+
+    font_cfg->SizePixels = 14.5f;
+    font_cfg->EllipsisChar = (ImWchar)0x0085;
+
+    const ImWchar* glyph_ranges = font_cfg->GlyphRanges != NULL ? font_cfg->GlyphRanges : ImFontAtlas_GetGlyphRangesDefault(ioptr->Fonts);
+
+    main_font = ImFontAtlas_AddFontFromFileTTF(ioptr->Fonts, "res/0xProtoNerdFont-Regular.ttf", font_cfg->SizePixels, font_cfg, glyph_ranges);
+
     rligSetupFontAwesome();
 
     /* required to be called to cache the font texture with raylib */

@@ -17,11 +17,21 @@ _FONT_AWESOME_H_0="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgu
 _FONT_AWESOME_H_1="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/extras/IconsFontAwesome6.h"
 _FONT_AWESOME_LICENSE="https://raw.githubusercontent.com/alfredbaudisch/raylib-cimgui/master/extras/FontAwsome_LICENSE.txt"
 
+_FONT_TTF_0xProto="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/0xProto.tar.xz"
+
+if [[ ! -d "res" ]]; then
+    echo "Resource folder not found, downloading all of the resources..."
+    mkdir -p res
+    curl -L ${_FONT_TTF_0xProto} > res/0xProto.tar.xz
+    xz -d res/0xProto.tar.xz
+    tar -xf res/0xProto.tar -C res
+    rm res/0xProto.tar
+fi
+
 if [[ ! -d "${_VENDOR_DIR}" ]]; then
-    echo "Vendored libraries could not be found, installing now via \`dep_autoinstall\`"
+    echo "Vendored libraries could not be found, installing now..."
     mkdir -p ${_VENDOR_DIR}
     mkdir -p ${_VENDOR_DIR}/include
-    ./dep_autoinstall
 fi
 
 if [[ ! -f "${_VENDOR_DIR}/include/rlcimgui.h" ]]; then
