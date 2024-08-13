@@ -106,6 +106,11 @@ void ShadersInit(void) {
     renderTexture = LoadRenderTexture(screen_w, screen_h);
 }
 
+void ShadersDeInit(void) {
+    UnloadShader(outline_shader);
+    UnloadRenderTexture(renderTexture);
+}
+
 void InitGlobal(void) {
     cursor_disabled = false;
 
@@ -275,6 +280,7 @@ void DrawSelectedObjects(void) {
 void DeInitGlobal(void) {
     FREE(cam);
     DeInitObjects();
+    ShadersDeInit();
     DeInitGUI();
 }
 
