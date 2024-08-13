@@ -19,6 +19,8 @@ void CreateCube(void);
 
 void ExportMap(void);
 
+void ResizeObjectSelection(void);
+
 void CameraUpdate(void);
 
 typedef enum CameraState {

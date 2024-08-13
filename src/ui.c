@@ -141,6 +141,7 @@ void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_
                 if (active) break;
             }
             if (igCheckbox(TextFormat("%d: %s", i, GetObjectTypeString(objects[i].type)), &active)) {
+                ResizeObjectSelection();
                 selected_objects[*num_selected_objects] = &objects[i];
                 (*num_selected_objects)++;
             }

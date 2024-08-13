@@ -25,7 +25,7 @@ BoundingBox ground;
 Map map;
 
 Object** selected_objects; /* Holds the addresses to the selected objects in the map.objects array */
-ObjectCounter num_selected_objects;
+ObjectCounter num_selected_objects; /* COUNT STARTS FROM 1, as in 1 SELECTED OBJECT. to index do [num_selected_objects-1] */
 
 ObjectMoveState move_state;
 
@@ -53,8 +53,6 @@ void ObjectsInit(void) {
     MALLOC(map.objects, sizeof(Object) * OBJECTS_MEMORY_RESERVE);
     for (ObjectCounter i = map.num_objects; i < OBJECTS_MEMORY_RESERVE; ++i) {
         map.objects[i] = (Object){0};
-        // MALLOC(map.objects[i].label, sizeof(char) * LABEL_DATA_MEMORY_RESERVE);
-        // strcpy(map.objects[i].label, "NONE");
     }
     MALLOC(selected_objects, sizeof(Object*) * SELECTED_OBJECTS_MEMORY_RESERVE);
     num_selected_objects = 0;
@@ -149,8 +147,6 @@ void CreatePrimitive(Object new_obj) {
 
             for (ObjectCounter i = map.num_objects; i < (map.num_objects + OBJECTS_MEMORY_RESERVE); ++i) {
                 map.objects[i] = (Object){0};
-                // MALLOC(map.objects[i].label, sizeof(char) * LABEL_DATA_MEMORY_RESERVE);
-                // strcpy(map.objects[i].label, "NONE");
             }
         }
 
@@ -276,9 +272,9 @@ void ResizeObjectSelection(void) {
     /* Resize selected_objects array if needed */
     if ((num_selected_objects + 1) % SELECTED_OBJECTS_MEMORY_RESERVE == 0) {
         REALLOC(selected_objects, sizeof(Object*) * (num_selected_objects + SELECTED_OBJECTS_MEMORY_RESERVE));
-        for (ObjectCounter i = 0; i < num_selected_objects + SELECTED_OBJECTS_MEMORY_RESERVE; ++i) {
-            MALLOC(selected_objects[i]->label, sizeof(char) * LABEL_DATA_MEMORY_RESERVE);
-        }
+        // for (ObjectCounter i = 0; i < num_selected_objects + SELECTED_OBJECTS_MEMORY_RESERVE; ++i) {
+        //     MALLOC(selected_objects[i]->label, sizeof(char) * LABEL_DATA_MEMORY_RESERVE);
+        // }
     }
 }
 
