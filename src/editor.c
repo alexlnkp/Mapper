@@ -30,6 +30,10 @@ ObjectCounter num_selected_objects; /* COUNT STARTS FROM 1, as in 1 SELECTED OBJ
 ObjectMoveState move_state;
 
 float default_line_width;
+
+RenderTexture renderTexture;
+Shader outline_shader;
+int sizeLoc;
 /* ---------------- */
 
 inline float vFov_from_hFov(float hFov, float aspect) {
@@ -83,6 +87,25 @@ void MapInit(void) {
     ObjectsInit();
 }
 
+void ShadersInit(void) {
+    const int screen_w = GetRenderWidth();
+    const int screen_h = GetRenderHeight();
+
+    int outline_size = OUTLINE_WIDTH;
+    const float outlineColor[4] = OUTLINE_COLOR;
+
+    outline_shader = LoadShader(0, OUTLINE_SHADER_LOCATION);
+
+    SetShaderValue(outline_shader, GetShaderLocation(outline_shader, "width"), &screen_w, SHADER_UNIFORM_INT);
+    SetShaderValue(outline_shader, GetShaderLocation(outline_shader, "height"), &screen_h, SHADER_UNIFORM_INT);
+    SetShaderValue(outline_shader, GetShaderLocation(outline_shader, "color"), outlineColor, SHADER_UNIFORM_VEC4);
+
+    sizeLoc = GetShaderLocation(outline_shader, "size");
+    SetShaderValue(outline_shader, sizeLoc, &outline_size, SHADER_UNIFORM_INT);
+
+    renderTexture = LoadRenderTexture(screen_w, screen_h);
+}
+
 void InitGlobal(void) {
     cursor_disabled = false;
 
@@ -97,6 +120,7 @@ void InitGlobal(void) {
     MapInit();
 
     default_line_width = rlGetLineWidth();
+    ShadersInit();
 
     InitGUI();
 }
@@ -216,17 +240,31 @@ void DrawObjects(void) {
         switch (cur_obj.type) {
         case OT_Cube: {
             Vector3 _dim = cur_obj.data.Cube.dim;
-            for (ObjectCounter j = 0; j < num_selected_objects; ++j) {
-                if (selected_objects[j] == &map.objects[i]) {
-                    /* A VERY hacky way to do an object outline. Won't work for more complex shapes. */
-                    DrawCube(cur_obj.pos, _dim.x*-1.04, _dim.y*-1.04, _dim.z*-1.04, (Color){255, 202, 76, 255});
-                }
-            }
             DrawCube(cur_obj.pos, _dim.x, _dim.y, _dim.z, cur_obj.col);
         } break;
 
         case OT_Sphere: {
             DrawSphere(cur_obj.pos, cur_obj.data.Sphere.radius, cur_obj.col);
+        } break;
+
+        default: {} break;
+        }
+    }
+}
+
+void DrawSelectedObjects(void) {
+    /* Draw silhouettes of our selected objects so that the shader can properly draw an outline for them */
+    for (ObjectCounter i = 0; i < num_selected_objects; ++i) {
+        Object* cur_obj = selected_objects[i];
+
+        switch (cur_obj->type) {
+        case OT_Cube: {
+            Vector3 _dim = cur_obj->data.Cube.dim;
+            DrawCube(cur_obj->pos, _dim.x, _dim.y, _dim.z, BLACK);
+        } break;
+
+        case OT_Sphere: {
+            DrawSphere(cur_obj->pos, cur_obj->data.Sphere.radius, BLACK);
         } break;
 
         default: {} break;
@@ -449,6 +487,22 @@ void Draw(void) {
             DrawObjects();
 
         } EndMode3D();
+        
+        /*Next section is HEAVILY based on https://github.com/denysmaistruk/raylib-model-outline
+          Huge thanks to Denys Maistruk for this wonderful code!*/
+        BeginTextureMode(renderTexture); {
+            ClearBackground(WHITE);
+
+            BeginMode3D(*cam); {
+                DrawSelectedObjects();
+            } EndMode3D();
+        } EndTextureMode(); 
+
+        BeginShaderMode(outline_shader); {
+            DrawTextureRec(renderTexture.texture, 
+                (Rectangle){ 0.0f, 0.0f, (float)renderTexture.texture.width, (float)-renderTexture.texture.height }, (Vector2){ 0.0f, 0.0f }, WHITE);
+        } EndShaderMode();
+        /*--------------------------------------------------------------------------------------*/
 
         DrawGUI(selected_objects, &num_selected_objects, map.num_objects, map.objects);
     } EndDrawing();

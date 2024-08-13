@@ -31,6 +31,10 @@
 #define ZLINE_COLOR (Color){.a=255, .r=4,   .g=146, .b=90}
 #define YLINE_COLOR (Color){.a=255, .r=232, .g=193, .b=12}
 
+#define OUTLINE_SHADER_LOCATION "shaders/outline.frag"
+#define OUTLINE_WIDTH 4
+#define OUTLINE_COLOR {1.0f, 0.79f, 0.29f, 1.0f} // Yellow-ish orange
+
 #define DEFAULT_MAP_NAME "new_map"
 #define DEFAULT_MAP_AUTHOR "unspecified"
 
