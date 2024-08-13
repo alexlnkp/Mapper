@@ -40,6 +40,7 @@ typedef struct Object {
     Vector3 pos; /* Center point of the object in the world space */
     ObjectType type;
     Color col;
+
     union {
         struct {
             Vector3 dim; /* Dimensionality of the cube; x for width, y for height, z for length */
@@ -49,6 +50,8 @@ typedef struct Object {
             float radius;
         } Sphere;
     } data;
+
+    char* label; /* ANY DATA */
 } Object;
 
 typedef enum {

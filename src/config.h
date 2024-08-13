@@ -21,6 +21,8 @@
 
 #define OBJECTS_MEMORY_RESERVE 10 /* how many objects we can reserve in advance during reallocation */
 #define SELECTED_OBJECTS_MEMORY_RESERVE 10 /* how many selected objects we can reserve in memory in advance during reallocation */
+#define LABEL_DATA_MEMORY_RESERVE 10 /* how many chars we can reserve in memory in advance for label data */
+#define LABEL_DATA_MAX_SIZE 2056
 
 #define OBJECT_MOVE_SPEED 0.02f
 

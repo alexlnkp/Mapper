@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <ctype.h>
+#include <string.h>
 
 #include "imgui_impl_raylib.h"
 #include "rlcimgui.h"
@@ -6,6 +8,8 @@
 
 #include "config.h"
 #include "ui.h"
+
+#include "funkymacros.h"
 
 const char* GetObjectTypeString(ObjectType type) {
     switch (type) {
@@ -101,6 +105,28 @@ void DrawContextMenu(void) {
     }
 }
 
+char* TrimWhiteSpaces(char *str) {
+    /* function from stackoverflow: https://stackoverflow.com/a/122721/25145880
+    Author: Adam Rosenfield
+    */
+    char *end;
+
+    // Trim leading space
+    while(isspace((unsigned char)*str)) str++;
+
+    if(*str == 0)  // All spaces?
+        return str;
+
+    // Trim trailing space
+    end = str + strlen(str) - 1;
+    while(end > str && isspace((unsigned char)*end)) end--;
+
+    // Write new null terminator character
+    end[1] = '\0';
+
+    return str;
+}
+
 void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_objects, ObjectCounter num_objects, Object* objects) {
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse;
 
@@ -145,6 +171,22 @@ void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selecte
                 if (igDragFloat("Z", &new_z, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
                     selected_objects[cur_obj_idx]->pos.z = new_z;
                 
+                static char buf[LABEL_DATA_MAX_SIZE];
+
+                if (strcmp(buf, selected_objects[cur_obj_idx]->label) != 0)
+                    strncpy(buf, selected_objects[cur_obj_idx]->label, LABEL_DATA_MAX_SIZE);
+
+                if (igInputText("Label", buf, LABEL_DATA_MAX_SIZE, 0, 0, NULL)) {
+                    unsigned new_len = strlen(buf) + 1;
+                    if (new_len % LABEL_DATA_MEMORY_RESERVE == 0) {
+                        new_len += LABEL_DATA_MEMORY_RESERVE;
+                        REALLOC(selected_objects[cur_obj_idx]->label, sizeof(char) * new_len);
+                        TraceLog(LOG_DEBUG, "Realloc'd for label of selected_objects[cur_obj_idx]");
+                    }
+
+                    strncpy(selected_objects[cur_obj_idx]->label, buf, new_len);
+                }
+
                 int current_obj_type = selected_objects[cur_obj_idx]->type;
                 if (igCombo_Str_arr("Type", &current_obj_type, obj_types, sizeof(obj_types) / sizeof(obj_types[0]), 0)) {
                     selected_objects[cur_obj_idx]->type = current_obj_type;

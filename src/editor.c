@@ -53,9 +53,22 @@ void ObjectsInit(void) {
     MALLOC(map.objects, sizeof(Object) * OBJECTS_MEMORY_RESERVE);
     for (ObjectCounter i = map.num_objects; i < OBJECTS_MEMORY_RESERVE; ++i) {
         map.objects[i] = (Object){0};
+        // MALLOC(map.objects[i].label, sizeof(char) * LABEL_DATA_MEMORY_RESERVE);
+        // strcpy(map.objects[i].label, "NONE");
     }
     MALLOC(selected_objects, sizeof(Object*) * SELECTED_OBJECTS_MEMORY_RESERVE);
     num_selected_objects = 0;
+}
+
+void DeInitObjects(void) {
+    num_selected_objects = 0;
+    FREE(selected_objects);
+    for (ObjectCounter i = 0; i < map.num_objects; ++i) {
+        map.objects[i] = (Object){0};
+        FREE(map.objects[i].label);
+    }
+    FREE(map.objects);
+    map.num_objects = 0;
 }
 
 void MapInit(void) {
@@ -104,7 +117,12 @@ void ExportMap(void) {
     fwrite(&map.num_objects, sizeof(ObjectCounter), 1, fp);
 
     for (ObjectCounter i = 0; i < map.num_objects; ++i) {
-        fwrite(&map.objects[i], sizeof(Object), 1, fp);
+        Object cur_obj = map.objects[i];
+        fwrite(&cur_obj.pos, sizeof(Vector3), 1, fp);
+        fwrite(&cur_obj.type, sizeof(ObjectType), 1, fp);
+        fwrite(&cur_obj.col, sizeof(Color), 1, fp);
+        fwrite(&cur_obj.data, sizeof(cur_obj.data), 1, fp);
+        fwrite(cur_obj.label, sizeof(char) * (strlen(cur_obj.label) + 1), 1, fp);
     }
 
     /* Meta is the last to be stored */
@@ -131,8 +149,13 @@ void CreatePrimitive(Object new_obj) {
 
             for (ObjectCounter i = map.num_objects; i < (map.num_objects + OBJECTS_MEMORY_RESERVE); ++i) {
                 map.objects[i] = (Object){0};
+                // MALLOC(map.objects[i].label, sizeof(char) * LABEL_DATA_MEMORY_RESERVE);
+                // strcpy(map.objects[i].label, "NONE");
             }
         }
+
+        MALLOC(new_obj.label, sizeof(char) * LABEL_DATA_MEMORY_RESERVE);
+        strcpy(new_obj.label, "NONE");
 
         map.objects[map.num_objects] = new_obj;
         map.num_objects++;
@@ -217,8 +240,7 @@ void DrawObjects(void) {
 
 void DeInitGlobal(void) {
     FREE(cam);
-    FREE(map.objects);
-    FREE(selected_objects);
+    DeInitObjects();
     DeInitGUI();
 }
 
@@ -254,6 +276,9 @@ void ResizeObjectSelection(void) {
     /* Resize selected_objects array if needed */
     if ((num_selected_objects + 1) % SELECTED_OBJECTS_MEMORY_RESERVE == 0) {
         REALLOC(selected_objects, sizeof(Object*) * (num_selected_objects + SELECTED_OBJECTS_MEMORY_RESERVE));
+        for (ObjectCounter i = 0; i < num_selected_objects + SELECTED_OBJECTS_MEMORY_RESERVE; ++i) {
+            MALLOC(selected_objects[i]->label, sizeof(char) * LABEL_DATA_MEMORY_RESERVE);
+        }
     }
 }
 

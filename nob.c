@@ -1,6 +1,8 @@
 #define NOBUILD_IMPLEMENTATION
 #include "nob.h"
 
+/* To build, run: `cc -o ./nob nob.c` */
+
 #include "nob_cfg.h"
 
 #define COMPILER "gcc"
@@ -24,18 +26,26 @@ int main(int argc, char* argv[]) {
     char* cstd = malloc(10 * sizeof(char));
     sprintf(cstd, "-std=c%d", C_STD);
 
-#define CFLAGS "-Wall", "-Wextra", "-O3", "-flto", "-Wno-unused-variable", "-Wno-unused-parameter", cstd
-#define IFLAGS "-Isrc", "-I" VENDIR "include"
-#define LFLAGS "-L" LIBDIR, "-lraylib", "-l:cimgui.so", "-lm", "-Wl,-R" LIBDIR, "-Wl,--gc-sections", "-ffunction-sections", "-fdata-sections"
-#define SFLAGS SRCDIR "editor.c", SRCDIR "ui.c", VENDIR "rlcimgui.c"
+#define CFLAGS_REL "-Wall", "-Wextra", "-O3", "-flto", "-Wno-unused-variable", "-Wno-unused-parameter", cstd
+#define IFLAGS_REL "-Isrc", "-I" VENDIR "include"
+#define LFLAGS_REL "-L" LIBDIR, "-lraylib", "-l:cimgui.so", "-lm", "-Wl,-R" LIBDIR, "-Wl,--gc-sections", "-ffunction-sections", "-fdata-sections"
+#define SFLAGS_REL SRCDIR "editor.c", SRCDIR "ui.c", VENDIR "rlcimgui.c"
+
+#define CFLAGS_DBG "-Wall", "-Wextra", "-Og", "-g", "-Wno-unused-variable", "-Wno-unused-parameter", cstd
+#define IFLAGS_DBG "-Isrc", "-I" VENDIR "include"
+#define LFLAGS_DBG "-L" LIBDIR, "-lraylib", "-l:cimgui.so", "-lm", "-Wl,-R" LIBDIR
+#define SFLAGS_DBG SRCDIR "editor.c", SRCDIR "ui.c", VENDIR "rlcimgui.c"
 
     /*Running:
     gcc src/editor.c src/ui.c vendor/rlcimgui.c -Wall -Wextra -O3 -std=c99 -flto -l:cimgui.so -lraylib -lm -Ivendor/include -Lvendor/lib -Wl,-Rvendor/lib -Wno-unused-variable -Wno-unused-parameter -Wl,--gc-sections -ffunction-sections -fdata-sections -o bin/editor
     */
 
-    CMD(COMPILER, CFLAGS, SFLAGS, IFLAGS, LFLAGS, "-o", EDITOR_EXEC);
-
+#ifdef DEBUG
+    CMD(COMPILER, CFLAGS_DBG, SFLAGS_DBG, IFLAGS_DBG, LFLAGS_DBG, "-o", EDITOR_EXEC);
+#else
+    CMD(COMPILER, CFLAGS_REL, SFLAGS_REL, IFLAGS_REL, LFLAGS_REL, "-o", EDITOR_EXEC);
     CMD(STRIP_EVERYTHING, EDITOR_EXEC);
+#endif
     CMD(STRIP_EVERYTHING, EX_MAPREADER_EXEC);
 
     CMD("cloc", ".", "--not-match-f=nob_cfg.h", "--not-match-f=nob.h", "--not-match-f=nob.c",
