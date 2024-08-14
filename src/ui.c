@@ -13,17 +13,6 @@
 
 ImFont* main_font;
 
-const char* GetObjectTypeString(ObjectType type) {
-    switch (type) {
-    case OT_Cube: return "Cube";
-    case OT_Sphere: return "Sphere";
-    default: return "IDK";
-    }
-
-    assert(false);
-    return "";
-}
-
 void SetupImGuiStyle(void) {
 	/* Fork of Future Dark style from ImThemes */
 	ImGuiStyle* style = igGetStyle();
@@ -232,7 +221,7 @@ void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_
                 active = (selected_objects[j] == &objects[i]);
                 if (active) break;
             }
-            if (igCheckbox(TextFormat("%d: %s", i, GetObjectTypeString(objects[i].type)), &active)) {
+            if (igCheckbox(TextFormat("%d: %s", i, obj_types[objects[i].type]), &active)) {
                 ResizeObjectSelection();
                 selected_objects[*num_selected_objects] = &objects[i];
                 (*num_selected_objects)++;
