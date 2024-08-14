@@ -32,6 +32,7 @@ int main(int argc, const char** argv) {
     GO_REBUILD_URSELF(argc, argv);
 
     int debug = 0;
+    int build_examples = 0;
 
     char* cstd = malloc(10 * sizeof(char));
     sprintf(cstd, "-std=c%d", C_STD);
@@ -53,6 +54,7 @@ int main(int argc, const char** argv) {
     struct argparse_option options[] = {
         OPT_HELP(),
         OPT_BOOLEAN('d', "debug", &debug, "build in debug", NULL, 0, 0),
+        OPT_BOOLEAN('e', "build-examples", &build_examples, "build examples", NULL, 0, 0),
         OPT_END()
     };
 
@@ -69,6 +71,10 @@ int main(int argc, const char** argv) {
         /* building NOT debug!!! */
         CMD(COMPILER, CFLAGS_REL, SFLAGS_REL, IFLAGS_REL, LFLAGS_REL, "-o", EDITOR_EXEC);
         CMD(STRIP_EVERYTHING, EDITOR_EXEC);
+    }
+
+    if (build_examples != 0) {
+        CMD(COMPILER, CFLAGS_REL, "-Isrc", "examples/readmap.c", "-L" LIBDIR, "-lraylib", "-o", EX_MAPREADER_EXEC);
     }
 
     CMD("cloc", ".", "--quiet", "--not-match-f=nob_cfg.h", "--not-match-f=nob.h", "--not-match-f=nob.c",
