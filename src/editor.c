@@ -335,6 +335,7 @@ void HandleResolutionChange(void) {
         screen_h = cur_render_h;
         SetShaderValue(outline_shader, GetShaderLocation(outline_shader, "height"), &screen_h, SHADER_UNIFORM_INT);
 
+        UnloadRenderTexture(renderTexture);
         renderTexture = LoadRenderTexture(screen_w, screen_h);
     }
 }
