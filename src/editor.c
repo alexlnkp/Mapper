@@ -34,6 +34,9 @@ float default_line_width;
 RenderTexture renderTexture;
 Shader outline_shader;
 int sizeLoc;
+
+int screen_w; /* current screen width */
+int screen_h; /* current screen height */
 /* ---------------- */
 
 inline float vFov_from_hFov(float hFov, float aspect) {
@@ -88,8 +91,8 @@ void MapInit(void) {
 }
 
 void ShadersInit(void) {
-    const int screen_w = GetRenderWidth();
-    const int screen_h = GetRenderHeight();
+    screen_w = GetRenderWidth();
+    screen_h = GetRenderHeight();
 
     int outline_size = OUTLINE_WIDTH;
     const float outlineColor[4] = OUTLINE_COLOR;
@@ -322,7 +325,23 @@ void ResizeObjectSelection(void) {
     }
 }
 
+void HandleResolutionChange(void) {
+    int cur_render_w = GetRenderWidth();
+    int cur_render_h = GetRenderHeight();
+    if (screen_w != cur_render_w || screen_h != cur_render_h) {
+        screen_w = cur_render_w;
+        SetShaderValue(outline_shader, GetShaderLocation(outline_shader, "width"), &screen_w, SHADER_UNIFORM_INT);
+
+        screen_h = cur_render_h;
+        SetShaderValue(outline_shader, GetShaderLocation(outline_shader, "height"), &screen_h, SHADER_UNIFORM_INT);
+
+        renderTexture = LoadRenderTexture(screen_w, screen_h);
+    }
+}
+
 void HandleEvents(void) {
+    HandleResolutionChange();
+
     if (!IsHoveringOverAnyGUIElement()) {
         if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
             cam_state = CS_WantsToMoveFreely;
