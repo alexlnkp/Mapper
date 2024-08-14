@@ -103,6 +103,19 @@ void SetupImGuiStyle(void) {
 	style->Colors[ImGuiCol_ModalWindowDimBg] = (ImVec4){0.196078434586525f, 0.1764705926179886f, 0.5450980663299561f, 0.501960813999176f};
 }
 
+Color Float4ToRLColor(float* ic) {
+    ImU32 cs = igColorConvertFloat4ToU32((ImVec4){ic[0], ic[1], ic[2], ic[3]});
+
+    Color cl = {
+        .r=cs & 0xFF,
+        .g=(cs >> 8)  & 0xFF,
+        .b=(cs >> 16) & 0xFF,
+        .a=(cs >> 24) & 0xFF
+    };
+
+    return cl;
+}
+
 void MakeDockSpace(void) {
     /* Code here is heavily based on this example:
         https://gist.github.com/moebiussurfing/8dbc7fef5964adcd29428943b78e45d2
@@ -252,6 +265,18 @@ void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selecte
                 
                 if (igDragFloat("Z", &new_z, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
                     selected_objects[cur_obj_idx]->pos.z = new_z;
+
+                Color cur_obj_col = selected_objects[cur_obj_idx]->col;
+
+                ImVec4 ig_color = {0};
+                ImU32 color_mould = cur_obj_col.r | (cur_obj_col.g << 8) | (cur_obj_col.b << 16) | (cur_obj_col.a << 24);
+                igColorConvertU32ToFloat4(&ig_color, color_mould);
+
+                float col[4] = {ig_color.x, ig_color.y, ig_color.z, ig_color.w};
+                
+                if (igColorEdit4("Color", col, ImGuiColorEditFlags_Uint8)) {
+                    selected_objects[cur_obj_idx]->col = Float4ToRLColor(col);
+                }
                 
                 static char buf[LABEL_DATA_MAX_SIZE];
 
@@ -305,7 +330,7 @@ void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selecte
                 }
 
             } else {
-
+                /* TODO: handle object context menu for multiple selected objects */
             }
         }
     } igEnd();
