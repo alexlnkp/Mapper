@@ -330,10 +330,7 @@ void HandleResolutionChange(void) {
     int cur_render_h = GetRenderHeight();
     if (screen_w != cur_render_w || screen_h != cur_render_h) {
         screen_w = cur_render_w;
-        SetShaderValue(outline_shader, GetShaderLocation(outline_shader, "width"), &screen_w, SHADER_UNIFORM_INT);
-
         screen_h = cur_render_h;
-        SetShaderValue(outline_shader, GetShaderLocation(outline_shader, "height"), &screen_h, SHADER_UNIFORM_INT);
 
         UnloadRenderTexture(renderTexture);
         renderTexture = LoadRenderTexture(screen_w, screen_h);
