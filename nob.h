@@ -85,6 +85,8 @@ LPSTR GetLastErrorAsString(void);
 #include <string.h>
 #include <errno.h>
 
+#include "nob_cfg.h"
+
 #define FOREACH_ARRAY(type, elem, array, body)  \
     for (size_t elem_##index = 0;                           \
          elem_##index < array.count;                        \
@@ -213,7 +215,7 @@ void chain_echo(Chain chain);
 #       define REBUILD_URSELF(binary_path, source_path) CMD("cl.exe", source_path)
 #    endif
 #  else
-#    define REBUILD_URSELF(binary_path, source_path) CMD("cc", "-o", binary_path, source_path)
+#    define REBUILD_URSELF(binary_path, source_path) CMD("cc", "-o", binary_path, source_path, CONCAT(VENDIR_NOSLASH, "/argparse.c"))
 #  endif
 #endif
 

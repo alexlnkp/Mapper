@@ -19,6 +19,10 @@ _FONT_AWESOME_LICENSE="https://raw.githubusercontent.com/alfredbaudisch/raylib-c
 
 _FONT_TTF_0xProto="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/0xProto.tar.xz"
 
+ARGPARSE_H="https://raw.githubusercontent.com/cofyc/argparse/master/argparse.h"
+ARGPARSE_C="https://raw.githubusercontent.com/cofyc/argparse/master/argparse.c"
+ARGPARSE_LICENSE="https://raw.githubusercontent.com/cofyc/argparse/master/LICENSE"
+
 if [[ ! -d "res" ]]; then
     echo "Resource folder not found, downloading all of the resources..."
     mkdir -p res
@@ -32,6 +36,13 @@ if [[ ! -d "${_VENDOR_DIR}" ]]; then
     echo "Vendored libraries could not be found, installing now..."
     mkdir -p ${_VENDOR_DIR}
     mkdir -p ${_VENDOR_DIR}/include
+fi
+
+if [[ ! -f "${_VENDOR_DIR}/argparse.c" ]]; then
+    curl ${ARGPARSE_H} > ${_VENDOR_DIR}/argparse.h
+    curl ${ARGPARSE_C} > ${_VENDOR_DIR}/argparse.c
+    mkdir -p ${_VENDOR_DIR}/licenses/argparse
+    curl ${ARGPARSE_LICENSE} > ${_VENDOR_DIR}/licenses/argparse/LICENSE
 fi
 
 if [[ ! -f "${_VENDOR_DIR}/include/rlcimgui.h" ]]; then
