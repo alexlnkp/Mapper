@@ -199,28 +199,6 @@ void DrawContextMenu(void) {
     }
 }
 
-char* TrimWhiteSpaces(char *str) {
-    /* function from stackoverflow: https://stackoverflow.com/a/122721/25145880
-    Author: Adam Rosenfield
-    */
-    char *end;
-
-    // Trim leading space
-    while(isspace((unsigned char)*str)) str++;
-
-    if(*str == 0)  // All spaces?
-        return str;
-
-    // Trim trailing space
-    end = str + strlen(str) - 1;
-    while(end > str && isspace((unsigned char)*end)) end--;
-
-    // Write new null terminator character
-    end[1] = '\0';
-
-    return str;
-}
-
 void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_objects, ObjectCounter num_objects, Object* objects) {
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse;
 
