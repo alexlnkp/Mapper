@@ -27,7 +27,16 @@ char* ReadStringFromStream(FILE* file) {
 
     /* trim buffer and add 0x00 at the end */
     if (bytes_read > 0) {
-        buffer = realloc(buffer, bytes_read + 1);
+        /* problem here was found due to cppcheck, thank god for that */
+        char* new_buf = MemRealloc(buffer, bytes_read + 1);
+        if (new_buf == NULL) {
+            /* new realloc'd memory is NULL, but original buffer is still valid!! */
+            free(buffer); /* freeing to prevent OOB read segfault */
+            assert(false && "Not enough memory to realloc");
+        } else {
+            buffer = new_buf;
+        }
+
         buffer[bytes_read] = '\0';
     }
 
