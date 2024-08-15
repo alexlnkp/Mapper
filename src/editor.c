@@ -183,7 +183,7 @@ void CreatePrimitive(Object new_obj) {
         }
 
         MALLOC(new_obj.label, sizeof(char) * LABEL_DATA_MEMORY_RESERVE);
-        strcpy(new_obj.label, "NONE");
+        strncpy(new_obj.label, "NONE", LABEL_DATA_MEMORY_RESERVE);
 
         map.objects[map.num_objects] = new_obj;
         map.num_objects++;
@@ -319,9 +319,6 @@ void ResizeObjectSelection(void) {
     /* Resize selected_objects array if needed */
     if ((num_selected_objects + 1) % SELECTED_OBJECTS_MEMORY_RESERVE == 0) {
         REALLOC(selected_objects, sizeof(Object*) * (num_selected_objects + SELECTED_OBJECTS_MEMORY_RESERVE));
-        // for (ObjectCounter i = 0; i < num_selected_objects + SELECTED_OBJECTS_MEMORY_RESERVE; ++i) {
-        //     MALLOC(selected_objects[i]->label, sizeof(char) * LABEL_DATA_MEMORY_RESERVE);
-        // }
     }
 }
 
