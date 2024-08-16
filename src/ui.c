@@ -267,7 +267,7 @@ void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selecte
 
     bool show = (igBegin("Properties", NULL, windowFlags)); {
         if (*num_selected_objects != (ObjectCounter)-1) {
-            if (*num_selected_objects < 2) {
+            if (*num_selected_objects < 1) {
                 ObjectCounter cur_obj_idx = *num_selected_objects;
 
                 float new_x = selected_objects[cur_obj_idx]->pos.x;
