@@ -61,6 +61,12 @@ void ObjectsInit(void) {
     for (ObjectCounter i = map.num_objects; i < OBJECTS_MEMORY_RESERVE; ++i) {
         map.objects[i] = (Object){0};
     }
+    MALLOC(map.meta.name, sizeof(char) * (strlen(DEFAULT_MAP_NAME) + 1 + MAP_META_FIELD_MEMORY_RESERVE));
+    strcpy(map.meta.name, DEFAULT_MAP_NAME);
+
+    MALLOC(map.meta.author, sizeof(char) * (strlen(DEFAULT_MAP_AUTHOR) + 1 + MAP_META_FIELD_MEMORY_RESERVE));
+    strcpy(map.meta.author, DEFAULT_MAP_AUTHOR);
+
     MALLOC(selected_objects, sizeof(Object*) * SELECTED_OBJECTS_MEMORY_RESERVE);
     num_selected_objects = 0;
 }

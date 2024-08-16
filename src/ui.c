@@ -13,6 +13,8 @@
 
 ImFont* main_font;
 
+bool show_map_meta_edit;
+
 void SetupImGuiStyle(void) {
 	/* Fork of Future Dark style from ImThemes */
 	ImGuiStyle* style = igGetStyle();
@@ -183,8 +185,9 @@ void EndGUIDraw(void) {
 void DrawContextMenu(void) {
     if (igBeginMenuBar()) {
         if (igBeginMenu("File", true)) {
-            if (igMenuItem_Bool("Exit", "Esc", false, true)) AskToLeave();
+            if (igMenuItem_Bool("Edit", "", false, true)) show_map_meta_edit = true;
             if (igMenuItem_Bool("Export map", "Ctrl+S", false, true)) ExportMap();
+            if (igMenuItem_Bool("Exit", "Esc", false, true)) AskToLeave();
             
             igEndMenu();
         }
@@ -196,6 +199,46 @@ void DrawContextMenu(void) {
         }
 
         igEndMenuBar();
+    }
+}
+
+void DrawMapMetaEditor(Map* map) {
+    if (show_map_meta_edit) {
+        static char buf_name[MAP_META_FIELD_MAX_SIZE];
+        if (strcmp(buf_name, map->meta.name) != 0)
+            strncpy(buf_name, map->meta.name, MAP_META_FIELD_MAX_SIZE);
+        
+        static char buf_author[MAP_META_FIELD_MAX_SIZE];
+        if (strcmp(buf_author, map->meta.author) != 0)
+            strncpy(buf_author, map->meta.author, MAP_META_FIELD_MAX_SIZE);
+
+        ImGuiWindowFlags wf = ImGuiWindowFlags_Popup | ImGuiWindowFlags_AlwaysAutoResize;
+
+        bool show = (igBegin("Edit map metadata", &show_map_meta_edit, wf)); {
+            if (igInputText("Map name", buf_name, MAP_META_FIELD_MAX_SIZE, 0, 0, NULL)) {
+                unsigned new_len_name = strlen(buf_name) + 1;
+                if (new_len_name % MAP_META_FIELD_MAX_SIZE == 0) {
+                    new_len_name += MAP_META_FIELD_MAX_SIZE;
+                    REALLOC(map->meta.name, sizeof(char) * new_len_name);
+                    TraceLog(LOG_DEBUG, "Realloc'd for name of MapMetadata");
+                }
+
+                strncpy(map->meta.name, buf_name, new_len_name);
+            }
+
+            if (igInputText("Map author", buf_author, MAP_META_FIELD_MAX_SIZE, 0, 0, NULL)) {
+                unsigned new_len_author = strlen(buf_author) + 1;
+                if (new_len_author % MAP_META_FIELD_MAX_SIZE == 0) {
+                    new_len_author += MAP_META_FIELD_MAX_SIZE;
+                    REALLOC(map->meta.author, sizeof(char) * new_len_author);
+                    TraceLog(LOG_DEBUG, "Realloc'd for author of MapMetadata");
+                }
+
+                strncpy(map->meta.author, buf_author, new_len_author); /* big bad */
+            }
+
+        } igEnd();
+
     }
 }
 
@@ -320,6 +363,7 @@ void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, Map
         MakeDockSpace();
         DrawObjectListPanel(selected_objects, num_selected_objects, map->num_objects, map->objects);
         DrawObjectContextMenu(selected_objects, num_selected_objects);
+        DrawMapMetaEditor(map);
         DrawContextMenu();
         igPopFont();
     } EndGUIDraw();
@@ -352,6 +396,8 @@ void InitGUI(void) {
     rligSetupFontAwesome();
 
     SetupImGuiStyle();
+
+    show_map_meta_edit = false;
 
     /* required to be called to cache the font texture with raylib */
     ImGui_ImplRaylib_BuildFontAtlas();
