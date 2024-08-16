@@ -334,6 +334,57 @@ void HandleResolutionChange(void) {
     }
 }
 
+void CameraUpdate(void) {
+    if (cam_state) {
+        const Vector2 mouseDelta = GetMouseDelta();
+
+        switch (cam_state) {
+        case CS_WantsToMoveFreely: {
+            CameraYaw(cam, -mouseDelta.x*CAMERA_MOUSE_SENSITIVITY, false);
+            CameraPitch(cam, -mouseDelta.y*CAMERA_MOUSE_SENSITIVITY, true, false, false);
+        } break;
+
+        case CS_WantsToPan: {
+            if (mouseDelta.x != 0.0f) {
+                CameraMoveRight(cam, CAMERA_PAN_SPEED * mouseDelta.x, false);
+            }
+            if (mouseDelta.y != 0.0f) {
+                CameraMoveUp(cam, CAMERA_PAN_SPEED * -mouseDelta.y);
+            }
+
+        } break;
+
+        default: {} break;
+        }
+    }
+}
+
+void DrawMoveHelpers(void) {
+    rlSetLineWidth(XYZLINES_THICKNESS);
+    if (move_state & OMS_WantsToMoveOnX) {
+        rlBegin(RL_LINES);
+            rlColor4ub(XLINE_COLOR.r, XLINE_COLOR.g, XLINE_COLOR.b, XLINE_COLOR.a);
+            rlVertex3f(-GROUND_TOTAL_LENGTH, 0.002f, 0.0f);
+            rlVertex3f(GROUND_TOTAL_LENGTH, 0.002f, 0.0f);
+        rlEnd();
+    } if (move_state & OMS_WantsToMoveOnZ) {
+        rlBegin(RL_LINES);
+            rlColor4ub(ZLINE_COLOR.r, ZLINE_COLOR.g, ZLINE_COLOR.b, ZLINE_COLOR.a);
+            rlVertex3f(0.0f, 0.002f, -GROUND_TOTAL_LENGTH);
+            rlVertex3f(0.0f, 0.002f, GROUND_TOTAL_LENGTH);
+        rlEnd();
+    } if (move_state & OMS_WantsToMoveOnY) {
+        rlBegin(RL_LINES);
+            rlColor4ub(YLINE_COLOR.r, YLINE_COLOR.g, YLINE_COLOR.b, YLINE_COLOR.a);
+            rlVertex3f(0.0f, -GROUND_TOTAL_LENGTH, 0.0f);
+            rlVertex3f(0.0f, GROUND_TOTAL_LENGTH, 0.0f);
+        rlEnd();
+    }
+
+    rlSetLineWidth(default_line_width);
+}
+
+/*                                  Dispatchers                                  */
 void HandleEvents(void) {
     HandleResolutionChange();
 
@@ -447,56 +498,6 @@ void Update(void) {
     CameraUpdate();
 }
 
-void CameraUpdate(void) {
-    if (cam_state) {
-        const Vector2 mouseDelta = GetMouseDelta();
-
-        switch (cam_state) {
-        case CS_WantsToMoveFreely: {
-            CameraYaw(cam, -mouseDelta.x*CAMERA_MOUSE_SENSITIVITY, false);
-            CameraPitch(cam, -mouseDelta.y*CAMERA_MOUSE_SENSITIVITY, true, false, false);
-        } break;
-
-        case CS_WantsToPan: {
-            if (mouseDelta.x != 0.0f) {
-                CameraMoveRight(cam, CAMERA_PAN_SPEED * mouseDelta.x, false);
-            }
-            if (mouseDelta.y != 0.0f) {
-                CameraMoveUp(cam, CAMERA_PAN_SPEED * -mouseDelta.y);
-            }
-
-        } break;
-
-        default: {} break;
-        }
-    }
-}
-
-void DrawMoveHelpers(void) {
-    rlSetLineWidth(XYZLINES_THICKNESS);
-    if (move_state & OMS_WantsToMoveOnX) {
-        rlBegin(RL_LINES);
-            rlColor4ub(XLINE_COLOR.r, XLINE_COLOR.g, XLINE_COLOR.b, XLINE_COLOR.a);
-            rlVertex3f(-GROUND_TOTAL_LENGTH, 0.002f, 0.0f);
-            rlVertex3f(GROUND_TOTAL_LENGTH, 0.002f, 0.0f);
-        rlEnd();
-    } if (move_state & OMS_WantsToMoveOnZ) {
-        rlBegin(RL_LINES);
-            rlColor4ub(ZLINE_COLOR.r, ZLINE_COLOR.g, ZLINE_COLOR.b, ZLINE_COLOR.a);
-            rlVertex3f(0.0f, 0.002f, -GROUND_TOTAL_LENGTH);
-            rlVertex3f(0.0f, 0.002f, GROUND_TOTAL_LENGTH);
-        rlEnd();
-    } if (move_state & OMS_WantsToMoveOnY) {
-        rlBegin(RL_LINES);
-            rlColor4ub(YLINE_COLOR.r, YLINE_COLOR.g, YLINE_COLOR.b, YLINE_COLOR.a);
-            rlVertex3f(0.0f, -GROUND_TOTAL_LENGTH, 0.0f);
-            rlVertex3f(0.0f, GROUND_TOTAL_LENGTH, 0.0f);
-        rlEnd();
-    }
-
-    rlSetLineWidth(default_line_width);
-}
-
 void Draw(void) {
     BeginDrawing(); {
         ClearBackground(RAYWHITE);
@@ -528,6 +529,8 @@ void Draw(void) {
     } EndDrawing();
 }
 
+/* ----------------------------------------------------------------------------- */
+
 void AskToLeave(void) {
     DeInitGlobal();
     CloseWindow();
@@ -548,8 +551,7 @@ int main(void) {
         Draw();
     }
 
-    DeInitGlobal();
-    CloseWindow();
+    AskToLeave();
 
     return 0;
 }
