@@ -234,7 +234,7 @@ void DrawMapMetaEditor(Map* map) {
                     TraceLog(LOG_DEBUG, "Realloc'd for author of MapMetadata");
                 }
 
-                strncpy(map->meta.author, buf_author, new_len_author); /* big bad */
+                strncpy(map->meta.author, buf_author, new_len_author);
             }
 
         } igEnd();
