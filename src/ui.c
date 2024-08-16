@@ -314,11 +314,11 @@ void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selecte
     } igEnd();
 }
 
-void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, ObjectCounter num_objects, Object* objects) {
+void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, Map* map) {
     BeginGUIDraw(); {
         igPushFont(main_font);
         MakeDockSpace();
-        DrawObjectListPanel(selected_objects, num_selected_objects, num_objects, objects);
+        DrawObjectListPanel(selected_objects, num_selected_objects, map->num_objects, map->objects);
         DrawObjectContextMenu(selected_objects, num_selected_objects);
         DrawContextMenu();
         igPopFont();

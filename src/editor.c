@@ -525,7 +525,7 @@ void Draw(void) {
         } EndShaderMode();
         /*--------------------------------------------------------------------------------------*/
 
-        DrawGUI(selected_objects, &num_selected_objects, map.num_objects, map.objects);
+        DrawGUI(selected_objects, &num_selected_objects, &map);
     } EndDrawing();
 }
 
