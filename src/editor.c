@@ -80,6 +80,9 @@ void DeInitObjects(void) {
     }
     FREE(map.objects);
     map.num_objects = 0;
+
+    FREE(map.meta.author);
+    FREE(map.meta.name);
 }
 
 void MapInit(void) {
