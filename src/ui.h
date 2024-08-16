@@ -12,7 +12,7 @@ void DeInitGUI(void);
 
 void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, ObjectCounter num_objects, Object* objects);
 
-bool IsHoveringOverAnyGUIElement(void);
+bool IsInteractingWithGUI(void);
 
 void UnlockGUI(void);
 void LockGUI(void);

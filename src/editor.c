@@ -337,7 +337,7 @@ void HandleResolutionChange(void) {
 void HandleEvents(void) {
     HandleResolutionChange();
 
-    if (!IsHoveringOverAnyGUIElement()) {
+    if (!IsInteractingWithGUI()) {
         if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
             cam_state = CS_WantsToMoveFreely;
             move_state = OMS_Stationary;
@@ -359,7 +359,7 @@ void HandleEvents(void) {
     case CS_Static: {
         /* Handle shortcuts or whatever */
 
-        if (!IsHoveringOverAnyGUIElement()) {
+        if (!IsInteractingWithGUI()) {
             Vector2 mouse_position = GetMousePosition();
 
             /*                Object selection                */

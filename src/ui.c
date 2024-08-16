@@ -360,7 +360,7 @@ void InitGUI(void) {
 void DeInitGUI(void) { ImGui_ImplRaylib_Shutdown(); igDestroyContext(NULL); }
 
 /* checks if user is interacting with gui in any way */
-bool IsHoveringOverAnyGUIElement(void) {
+bool IsInteractingWithGUI(void) {
     return igIsWindowHovered(ImGuiHoveredFlags_AnyWindow) || igIsAnyItemActive();
 }
 
