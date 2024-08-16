@@ -205,7 +205,7 @@ void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_
     /* that's so stupid i literally can't even comprehend why there's no better alternative in the imgui itself */
     igPushStyleColor_U32(ImGuiCol_ResizeGrip, 0);
 
-    bool show = (igBegin("Object list", NULL, windowFlags)); {
+    bool show = (igBegin("Objects", NULL, windowFlags)); {
         for (ObjectCounter i = 0; i < num_objects; ++i) {
             bool active = false;
             for (ObjectCounter j = 0; j < *num_selected_objects; ++j) {
@@ -224,7 +224,7 @@ void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_
 void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selected_objects) {
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse;
 
-    bool show = (igBegin("Object context menu", NULL, windowFlags)); {
+    bool show = (igBegin("Properties", NULL, windowFlags)); {
         if (*num_selected_objects > 0) {
             if (*num_selected_objects < 2) {
                 ObjectCounter cur_obj_idx = *num_selected_objects - 1;
