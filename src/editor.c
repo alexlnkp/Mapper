@@ -436,8 +436,6 @@ void HandleEvents(void) {
 
     }
 
-    if (IsKeyDown(KEY_SPACE)) CreateCube();
-
     switch(cam_state) {
     case CS_Static: {
         /* Handle shortcuts or whatever */
