@@ -217,8 +217,8 @@ void DrawMapMetaEditor(Map* map) {
         bool show = (igBegin("Edit map metadata", &show_map_meta_edit, wf)); {
             if (igInputText("Map name", buf_name, MAP_META_FIELD_MAX_SIZE, 0, 0, NULL)) {
                 unsigned new_len_name = strlen(buf_name) + 1;
-                if (new_len_name % MAP_META_FIELD_MAX_SIZE == 0) {
-                    new_len_name += MAP_META_FIELD_MAX_SIZE;
+                if (new_len_name % MAP_META_FIELD_MEMORY_RESERVE == 0) {
+                    new_len_name += MAP_META_FIELD_MEMORY_RESERVE;
                     REALLOC(map->meta.name, sizeof(char) * new_len_name);
                     TraceLog(LOG_DEBUG, "Realloc'd for name of MapMetadata");
                 }
@@ -228,8 +228,8 @@ void DrawMapMetaEditor(Map* map) {
 
             if (igInputText("Map author", buf_author, MAP_META_FIELD_MAX_SIZE, 0, 0, NULL)) {
                 unsigned new_len_author = strlen(buf_author) + 1;
-                if (new_len_author % MAP_META_FIELD_MAX_SIZE == 0) {
-                    new_len_author += MAP_META_FIELD_MAX_SIZE;
+                if (new_len_author % MAP_META_FIELD_MEMORY_RESERVE == 0) {
+                    new_len_author += MAP_META_FIELD_MEMORY_RESERVE;
                     REALLOC(map->meta.author, sizeof(char) * new_len_author);
                     TraceLog(LOG_DEBUG, "Realloc'd for author of MapMetadata");
                 }
