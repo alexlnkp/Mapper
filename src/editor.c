@@ -577,8 +577,6 @@ int main(void) {
 
         Update();
 
-        printf("%u\n", num_selected_objects);
-
         Draw();
     }
 

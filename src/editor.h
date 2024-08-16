@@ -5,24 +5,6 @@
 extern "C" {
 #endif
 
-void AskToLeave(void);
-
-void InitGlobal(void);
-void DeInitGlobal(void);
-
-void HandleEvents(void);
-void Update(void);
-void Draw(void);
-
-void CreateSphere(void);
-void CreateCube(void);
-
-void ExportMap(void);
-
-void ResizeObjectSelection(void);
-
-void CameraUpdate(void);
-
 typedef enum CameraState {
     CS_Static,
     CS_WantsToMoveFreely,
@@ -30,7 +12,6 @@ typedef enum CameraState {
 } CameraState;
 
 typedef unsigned ObjectCounter;
-void SelectObjectAtIndex(ObjectCounter idx);
 
 typedef enum ObjType {
     OT_Cube,
@@ -75,6 +56,26 @@ typedef struct Map {
     ObjectCounter num_objects;
     MapMetadata meta;
 } Map;
+
+void AskToLeave(void);
+
+void InitGlobal(void);
+void DeInitGlobal(void);
+
+void HandleEvents(void);
+void Update(void);
+void Draw(void);
+
+void CreateSphere(void);
+void CreateCube(void);
+
+void ExportMap(void);
+
+void ResizeObjectSelection(void);
+
+void CameraUpdate(void);
+
+void SelectObjectAtIndex(ObjectCounter idx);
 
 #ifdef __cplusplus
 }
