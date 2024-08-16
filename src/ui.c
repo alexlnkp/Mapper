@@ -251,14 +251,12 @@ void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_
     bool show = (igBegin("Objects", NULL, windowFlags)); {
         for (ObjectCounter i = 0; i < num_objects; ++i) {
             bool active = false;
-            for (ObjectCounter j = 0; j < *num_selected_objects; ++j) {
+            for (ObjectCounter j = 0; j <= *num_selected_objects && *num_selected_objects != (ObjectCounter)-1; ++j) {
                 active = (selected_objects[j] == &objects[i]);
                 if (active) break;
             }
             if (igCheckbox(TextFormat("%d: %s", i, obj_types[objects[i].type]), &active)) {
-                ResizeObjectSelection();
-                selected_objects[*num_selected_objects] = &objects[i];
-                (*num_selected_objects)++;
+                SelectObjectAtIndex(i);
             }
         }
     } igEnd();
@@ -268,9 +266,9 @@ void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selecte
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse;
 
     bool show = (igBegin("Properties", NULL, windowFlags)); {
-        if (*num_selected_objects > 0) {
+        if (*num_selected_objects != (ObjectCounter)-1) {
             if (*num_selected_objects < 2) {
-                ObjectCounter cur_obj_idx = *num_selected_objects - 1;
+                ObjectCounter cur_obj_idx = *num_selected_objects;
 
                 float new_x = selected_objects[cur_obj_idx]->pos.x;
                 float new_y = selected_objects[cur_obj_idx]->pos.y;

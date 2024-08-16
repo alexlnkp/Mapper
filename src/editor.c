@@ -25,7 +25,7 @@ BoundingBox ground;
 Map map;
 
 Object** selected_objects; /* Holds the addresses to the selected objects in the map.objects array */
-ObjectCounter num_selected_objects; /* COUNT STARTS FROM 1, as in 1 SELECTED OBJECT. to index do [num_selected_objects-1] */
+ObjectCounter num_selected_objects; /* (ObjectCounter)-1 means no object selected, 0 means one is selected */
 
 ObjectMoveState move_state;
 
@@ -68,11 +68,11 @@ void ObjectsInit(void) {
     strcpy(map.meta.author, DEFAULT_MAP_AUTHOR);
 
     MALLOC(selected_objects, sizeof(Object*) * SELECTED_OBJECTS_MEMORY_RESERVE);
-    num_selected_objects = 0;
+    num_selected_objects = (ObjectCounter)-1;
 }
 
 void DeInitObjects(void) {
-    num_selected_objects = 0;
+    num_selected_objects = (ObjectCounter)-1;
     FREE(selected_objects);
     for (ObjectCounter i = 0; i < map.num_objects; ++i) {
         map.objects[i] = (Object){0};
@@ -271,20 +271,22 @@ void DrawObjects(void) {
 
 void DrawSelectedObjects(void) {
     /* Draw silhouettes of our selected objects so that the shader can properly draw an outline for them */
-    for (ObjectCounter i = 0; i < num_selected_objects; ++i) {
-        Object* cur_obj = selected_objects[i];
+    if (num_selected_objects != (ObjectCounter)-1) {
+        for (ObjectCounter i = 0; i <= num_selected_objects; ++i) {
+            Object* cur_obj = selected_objects[i];
 
-        switch (cur_obj->type) {
-        case OT_Cube: {
-            Vector3 _dim = cur_obj->data.Cube.dim;
-            DrawCube(cur_obj->pos, _dim.x, _dim.y, _dim.z, BLACK);
-        } break;
+            switch (cur_obj->type) {
+            case OT_Cube: {
+                Vector3 _dim = cur_obj->data.Cube.dim;
+                DrawCube(cur_obj->pos, _dim.x, _dim.y, _dim.z, BLACK);
+            } break;
 
-        case OT_Sphere: {
-            DrawSphere(cur_obj->pos, cur_obj->data.Sphere.radius, BLACK);
-        } break;
+            case OT_Sphere: {
+                DrawSphere(cur_obj->pos, cur_obj->data.Sphere.radius, BLACK);
+            } break;
 
-        default: {} break;
+            default: {} break;
+            }
         }
     }
 }
@@ -315,19 +317,21 @@ void UnlockCursor(void) {
 }
 
 void EmptyObjectSelection(void) {
-    for (ObjectCounter i = 0; i < num_selected_objects; ++i) {
-        selected_objects[i] = NULL;
+    if (num_selected_objects != (ObjectCounter)-1) {
+        for (ObjectCounter i = 0; i < num_selected_objects; ++i) {
+            selected_objects[i] = NULL;
+        }
+        if (num_selected_objects > SELECTED_OBJECTS_MEMORY_RESERVE) {
+            REALLOC(selected_objects, sizeof(Object*) * SELECTED_OBJECTS_MEMORY_RESERVE);
+        }
+        num_selected_objects = (ObjectCounter)-1;
     }
-    if (num_selected_objects > SELECTED_OBJECTS_MEMORY_RESERVE) {
-        REALLOC(selected_objects, sizeof(Object*) * SELECTED_OBJECTS_MEMORY_RESERVE);
-    }
-    num_selected_objects = 0;
 }
 
 void ResizeObjectSelection(void) {
     /* Resize selected_objects array if needed */
     if ((num_selected_objects + 1) % SELECTED_OBJECTS_MEMORY_RESERVE == 0) {
-        REALLOC(selected_objects, sizeof(Object*) * (num_selected_objects + SELECTED_OBJECTS_MEMORY_RESERVE));
+        REALLOC(selected_objects, sizeof(Object*) * (num_selected_objects + 1 + SELECTED_OBJECTS_MEMORY_RESERVE));
     }
 }
 
@@ -393,6 +397,23 @@ void DrawMoveHelpers(void) {
     rlSetLineWidth(default_line_width);
 }
 
+/* add address of an object from the object array to the selected_objects array */
+void SelectObjectAtIndex(ObjectCounter idx) {
+    if (idx == (ObjectCounter)-1) return;
+    bool active = false;
+
+    for (ObjectCounter j = 0; j <= num_selected_objects && num_selected_objects != (ObjectCounter)-1; ++j) {
+        active = (selected_objects[j] == &map.objects[idx]);
+        if (active) break;
+    }
+    
+    if (!active) {
+        ResizeObjectSelection();
+        num_selected_objects++;
+        selected_objects[num_selected_objects] = &map.objects[idx];
+    }
+}
+
 /*                                  Dispatchers                                  */
 void HandleEvents(void) {
     HandleResolutionChange();
@@ -415,6 +436,8 @@ void HandleEvents(void) {
 
     }
 
+    if (IsKeyDown(KEY_SPACE)) CreateCube();
+
     switch(cam_state) {
     case CS_Static: {
         /* Handle shortcuts or whatever */
@@ -430,9 +453,7 @@ void HandleEvents(void) {
                     /*      Multiple object selection      */
                     if (obj_index != (ObjectCounter)-1) {
                         /* User clicked on an object */
-                        ResizeObjectSelection();
-                        selected_objects[num_selected_objects] = &map.objects[obj_index];
-                        num_selected_objects++;
+                        SelectObjectAtIndex(obj_index);
                     }
                     /* ----------------------------------- */
                 } else {
@@ -440,8 +461,7 @@ void HandleEvents(void) {
                     EmptyObjectSelection();
                     if (obj_index != (ObjectCounter)-1) {
                         /* User clicked on an object */
-                        selected_objects[num_selected_objects] = &map.objects[obj_index];
-                        num_selected_objects++; /* Should set it to 1 ideally, not sure if that's a foolproof idea though */
+                        SelectObjectAtIndex(obj_index);
                     }
                     /* ----------------------------------- */
                 }
@@ -454,7 +474,7 @@ void HandleEvents(void) {
             but i prefer this look. If issues arise then no doubt i'll change it*/
             CameraMoveForward(cam, CAMERA_ZOOM_SPEED*mouse_wheel_delta, false);
             
-            if (IsKeyPressed(KEY_G) && num_selected_objects != 0) {
+            if (IsKeyPressed(KEY_G) && num_selected_objects != (ObjectCounter)-1) {
                 move_state = OMS_WantsToMoveOnX | OMS_WantsToMoveOnZ;
             }
         }
@@ -472,7 +492,7 @@ void HandleEvents(void) {
                 move_state = OMS_WantsToMoveOnZ;
             }
 
-            for (ObjectCounter i = 0; i < num_selected_objects; ++i) {
+            for (ObjectCounter i = 0; i <= num_selected_objects; ++i) {
                 if (move_state & OMS_WantsToMoveOnX) {
                     selected_objects[i]->pos.x += (mouse_delta.x) * OBJECT_MOVE_SPEED;
                 } if (move_state & OMS_WantsToMoveOnZ) {
@@ -556,6 +576,8 @@ int main(void) {
         HandleEvents();
 
         Update();
+
+        printf("%u\n", num_selected_objects);
 
         Draw();
     }

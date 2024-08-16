@@ -30,6 +30,7 @@ typedef enum CameraState {
 } CameraState;
 
 typedef unsigned ObjectCounter;
+void SelectObjectAtIndex(ObjectCounter idx);
 
 typedef enum ObjType {
     OT_Cube,
