@@ -23,6 +23,8 @@ ARGPARSE_H="https://raw.githubusercontent.com/cofyc/argparse/master/argparse.h"
 ARGPARSE_C="https://raw.githubusercontent.com/cofyc/argparse/master/argparse.c"
 ARGPARSE_LICENSE="https://raw.githubusercontent.com/cofyc/argparse/master/LICENSE"
 
+NFD_REPO="https://github.com/mlabbe/nativefiledialog.git"
+
 if [[ ! -d "res" ]]; then
     echo "Resource folder not found, downloading all of the resources..."
     mkdir -p res
@@ -158,12 +160,24 @@ if [[ ! -f "${_RUN_DIR}/${_VENDOR_DIR}/lib/cimgui.so" ]]; then
         install -Dm644 cimgui.h "${_RUN_DIR}/${_VENDOR_DIR}/include/cimgui.h"
         install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/cimgui/LICENSE"
     fi
-
-    cd ${_RUN_DIR}
 fi
 #################################################################
 
+if [[ ! -f "${_RUN_DIR}/${_VENDOR_DIR}/lib/libnfd.a" ]]; then
+    cd ${_RUN_DIR}/${TMP_FOLDER}
+    git clone --recursive ${NFD_REPO}
+    cd nativefiledialog
 
+    cd build/gmake_linux
+    make
+    cd ../..
+
+    install -Dm644 src/include/nfd.h "${_RUN_DIR}/${_VENDOR_DIR}/include/nfd.h"
+    install -Dm644 build/lib/Release/x64/libnfd.a "${_RUN_DIR}/${_VENDOR_DIR}/lib/libnfd.a"
+    install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/nativefiledialog/LICENSE"
+fi
+
+cd ${_RUN_DIR}
 
 ###### Registering a library on our system so that it can (HOPEFULLY) be found #####
 if [[ $1 = "-g" ]]; then

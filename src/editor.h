@@ -70,6 +70,7 @@ void CreateSphere(void);
 void CreateCube(void);
 
 void ExportMap(void);
+void ImportMap(char* file);
 
 void ResizeObjectSelection(void);
 

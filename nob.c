@@ -39,12 +39,12 @@ int main(int argc, const char** argv) {
 
 #define CFLAGS_REL "-Wall", "-Wextra", "-O3", "-flto", "-Wno-unused-variable", "-Wno-unused-parameter", cstd
 #define IFLAGS_REL "-Isrc", "-I" VENDIR "include"
-#define LFLAGS_REL "-L" LIBDIR, "-lraylib", "-l:cimgui.so", "-lm", "-Wl,-R" LIBDIR, "-Wl,--gc-sections", "-ffunction-sections", "-fdata-sections"
+#define LFLAGS_REL "-L" LIBDIR, "-lnfd", "-lgtk-3", "-lglib-2.0", "-lraylib", "-l:cimgui.so", "-lm", "-Wl,-R" LIBDIR, "-Wl,--gc-sections", "-ffunction-sections", "-fdata-sections"
 #define SFLAGS_REL SRCDIR "editor.c", SRCDIR "ui.c", VENDIR "rlcimgui.c"
 
 #define CFLAGS_DBG "-Wall", "-Wextra", "-Og", "-g", "-Wno-unused-variable", "-Wno-unused-parameter", cstd
 #define IFLAGS_DBG "-Isrc", "-I" VENDIR "include"
-#define LFLAGS_DBG "-L" LIBDIR, "-lraylib", "-l:cimgui.so", "-lm", "-Wl,-R" LIBDIR
+#define LFLAGS_DBG "-L" LIBDIR, "-lnfd", "-lgtk-3", "-lglib-2.0", "-lraylib", "-l:cimgui.so", "-lm", "-Wl,-R" LIBDIR
 #define SFLAGS_DBG SRCDIR "editor.c", SRCDIR "ui.c", VENDIR "rlcimgui.c"
 
     /*Running:

@@ -43,6 +43,40 @@ inline float vFov_from_hFov(float hFov, float aspect) {
     return (2.0f * atan(tan((hFov * DEG2RAD) / 2.0f) / aspect)) * RAD2DEG;
 }
 
+char* ReadStringFromStream(FILE* file) {
+    char* buffer = NULL;
+    size_t buffer_size = 0;
+    size_t bytes_read = 0;
+    int c;
+
+    /* read stream until 0x00 */
+    while ((c = fgetc(file)) != EOF && c != '\0') {
+        if (bytes_read % LABEL_READ_MEMORY_RESERVE == 0) {
+            buffer_size += LABEL_READ_MEMORY_RESERVE;
+            REALLOC(buffer, buffer_size);
+        }
+
+        buffer[bytes_read++] = (char)c;
+    }
+
+    /* trim buffer and add 0x00 at the end */
+    if (bytes_read > 0) {
+        /* problem here was found due to cppcheck, thank god for that */
+        char* new_buf = MemRealloc(buffer, bytes_read + 1);
+        if (new_buf == NULL) {
+            /* new realloc'd memory is NULL, but original buffer is still valid!! */
+            FREE(buffer); /* freeing to prevent OOB read segfault */
+            assert(false && "Not enough memory to realloc");
+        } else {
+            buffer = new_buf;
+        }
+
+        buffer[bytes_read] = '\0';
+    }
+
+    return buffer;
+}
+
 void CameraInit(void) {
     *cam = (Camera){0};
     cam->position = (Vector3){0.0f, 1.0f, 0.0f};
@@ -167,6 +201,25 @@ void ExportMap(void) {
     /* Meta is the last to be stored */
     fwrite(map.meta.name, sizeof(char) * (strlen(map.meta.name) + 1), 1, fp);
     fwrite(map.meta.author, sizeof(char) * (strlen(map.meta.author) + 1), 1, fp);
+
+    fclose(fp);
+}
+
+void ImportMap(char* file) {
+    FILE *fp = fopen(file, "rb");
+    assert(fp != NULL);
+
+    TraceLog(LOG_INFO, "Reading file lol");
+
+    fread(&map.num_objects, sizeof(ObjectCounter), 1, fp);
+
+    for (ObjectCounter i = 0; i < map.num_objects; ++i) {
+        fread(&map.objects[i].pos, sizeof(Vector3), 1, fp);
+        fread(&map.objects[i].type, sizeof(ObjectType), 1, fp);
+        fread(&map.objects[i].col, sizeof(Color), 1, fp);
+        fread(&map.objects[i].data, sizeof(map.objects[i].data), 1, fp);
+        map.objects[i].label = ReadStringFromStream(fp);
+    }
 
     fclose(fp);
 }

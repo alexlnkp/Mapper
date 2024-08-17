@@ -6,6 +6,8 @@
 #include "rlcimgui.h"
 #include <cimgui.h>
 
+#include <nfd.h>
+
 #include "config.h"
 #include "ui.h"
 
@@ -14,6 +16,13 @@
 ImFont* main_font;
 
 bool show_map_meta_edit;
+
+/* returns a pointer to an !ALLOCATED STRING! handling it is your responsibility */
+char* OpenFile(void) {
+    nfdchar_t *out_path = NULL;
+    nfdresult_t res = NFD_OpenDialog( NULL, "/kirby/Coding/3deditor", &out_path );
+    return out_path;
+}
 
 void SetupImGuiStyle(void) {
 	/* Fork of Future Dark style from ImThemes */
@@ -185,6 +194,14 @@ void EndGUIDraw(void) {
 void DrawContextMenu(void) {
     if (igBeginMenuBar()) {
         if (igBeginMenu("File", true)) {
+            if (igMenuItem_Bool("Open", "", false, true)) {
+                char* map_file = OpenFile();
+                if (map_file != NULL) {
+                    TraceLog(LOG_INFO, "Picked map file");
+                    ImportMap(map_file);
+                    FREE(map_file);
+                }
+            }
             if (igMenuItem_Bool("Edit", "", false, true)) show_map_meta_edit = true;
             if (igMenuItem_Bool("Export map", "Ctrl+S", false, true)) ExportMap();
             if (igMenuItem_Bool("Exit", "Esc", false, true)) AskToLeave();

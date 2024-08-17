@@ -26,6 +26,8 @@
 #define MAP_META_FIELD_MAX_SIZE 2056
 #define MAP_META_FIELD_MEMORY_RESERVE 10 /* how many chars we can reserve in memory in advance for map META fields' data */
 
+#define LABEL_READ_MEMORY_RESERVE 10
+
 #define OBJECT_MOVE_SPEED 0.02f
 
 #define XYZLINES_THICKNESS 2.0f
