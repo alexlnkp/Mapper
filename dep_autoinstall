@@ -23,7 +23,11 @@ ARGPARSE_H="https://raw.githubusercontent.com/cofyc/argparse/master/argparse.h"
 ARGPARSE_C="https://raw.githubusercontent.com/cofyc/argparse/master/argparse.c"
 ARGPARSE_LICENSE="https://raw.githubusercontent.com/cofyc/argparse/master/LICENSE"
 
-NFD_REPO="https://github.com/mlabbe/nativefiledialog.git"
+IMGUIFILEDIALOG_REPO="https://github.com/aiekick/ImGuiFileDialog.git"
+
+CIMGUI_PATCH0="https://gist.githubusercontent.com/alexlnkp/2e46c816e4a85b339476955421f382e1/raw/08f524d76e183867443d2e947e8b78fbddffae8c/0001-build-with-ImGuiFileDialog.patch"
+
+IMGUIFILEDIALOG_PATCH0="https://gist.githubusercontent.com/alexlnkp/7936bd34dc9b826892d2efbb52d39606/raw/0faf154615c6c008e602dd83166fbb7559334967/0001-fix-cstdint-not-found-error-in-C-API.patch"
 
 if [[ ! -d "res" ]]; then
     echo "Resource folder not found, downloading all of the resources..."
@@ -38,6 +42,12 @@ if [[ ! -d "${_VENDOR_DIR}" ]]; then
     echo "Vendored libraries could not be found, installing now..."
     mkdir -p ${_VENDOR_DIR}
     mkdir -p ${_VENDOR_DIR}/include
+fi
+
+if [[ ! -d "${_VENDOR_DIR}/etc" ]]; then
+    mkdir -p ${_VENDOR_DIR}/etc
+    curl ${CIMGUI_PATCH0} > ${_VENDOR_DIR}/etc/0001-build-with-ImGuiFileDialog.patch
+    curl ${IMGUIFILEDIALOG_PATCH0} > ${_VENDOR_DIR}/etc/0001-fix-cstdint-not-found-error-in-C-API.patch
 fi
 
 if [[ ! -f "${_VENDOR_DIR}/argparse.c" ]]; then
@@ -129,6 +139,12 @@ if [[ ! -f "${_RUN_DIR}/${_VENDOR_DIR}/lib/cimgui.so" ]]; then
     git clone --recursive ${CIMGUI_REPO}
 
     cd cimgui
+    git am --keep-cr --signoff < ${_RUN_DIR}/${_VENDOR_DIR}/etc/0001-build-with-ImGuiFileDialog.patch
+
+    git clone --recursive ${IMGUIFILEDIALOG_REPO}
+    cd ImGuiFileDialog
+    git am --keep-cr --signoff < ${_RUN_DIR}/${_VENDOR_DIR}/etc/0001-fix-cstdint-not-found-error-in-C-API.patch
+    cd ..
 
     if [[ $1 = "-g" ]]; then
         cmake                                      \
@@ -159,23 +175,13 @@ if [[ ! -f "${_RUN_DIR}/${_VENDOR_DIR}/lib/cimgui.so" ]]; then
         ninja -C build install
         install -Dm644 cimgui.h "${_RUN_DIR}/${_VENDOR_DIR}/include/cimgui.h"
         install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/cimgui/LICENSE"
+
+        install -Dm644 ImGuiFileDialog/ImGuiFileDialog.h "${_RUN_DIR}/${_VENDOR_DIR}/include/ImGuiFileDialog.h"
+        install -Dm644 ImGuiFileDialog/ImGuiFileDialogConfig.h "${_RUN_DIR}/${_VENDOR_DIR}/include/ImGuiFileDialogConfig.h"
+        install -Dm644 ImGuiFileDialog/LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/ImGuiFileDialog/LICENSE"
     fi
 fi
 #################################################################
-
-if [[ ! -f "${_RUN_DIR}/${_VENDOR_DIR}/lib/libnfd.a" ]]; then
-    cd ${_RUN_DIR}/${TMP_FOLDER}
-    git clone --recursive ${NFD_REPO}
-    cd nativefiledialog
-
-    cd build/gmake_linux
-    make
-    cd ../..
-
-    install -Dm644 src/include/nfd.h "${_RUN_DIR}/${_VENDOR_DIR}/include/nfd.h"
-    install -Dm644 build/lib/Release/x64/libnfd.a "${_RUN_DIR}/${_VENDOR_DIR}/lib/libnfd.a"
-    install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/nativefiledialog/LICENSE"
-fi
 
 cd ${_RUN_DIR}
 

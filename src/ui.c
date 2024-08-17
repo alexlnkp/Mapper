@@ -6,7 +6,7 @@
 #include "rlcimgui.h"
 #include <cimgui.h>
 
-#include <nfd.h>
+#include <ImGuiFileDialog.h>
 
 #include "config.h"
 #include "ui.h"
@@ -14,15 +14,9 @@
 #include "funkymacros.h"
 
 ImFont* main_font;
+ImGuiFileDialog* ig_fd;
 
 bool show_map_meta_edit;
-
-/* returns a pointer to an !ALLOCATED STRING! handling it is your responsibility */
-char* OpenFile(void) {
-    nfdchar_t *out_path = NULL;
-    nfdresult_t res = NFD_OpenDialog( NULL, NULL, &out_path );
-    return out_path;
-}
 
 void SetupImGuiStyle(void) {
 	/* Fork of Future Dark style from ImThemes */
@@ -195,12 +189,11 @@ void DrawContextMenu(void) {
     if (igBeginMenuBar()) {
         if (igBeginMenu("File", true)) {
             if (igMenuItem_Bool("Open", "", false, true)) {
-                char* map_file = OpenFile();
-                if (map_file != NULL) {
-                    TraceLog(LOG_DEBUG, "Picked map file in DrawContextMenu() ; File: %s", map_file);
-                    ImportMap(map_file);
-                    FREE(map_file);
-                }
+                ig_fd = IGFD_Create();
+                struct IGFD_FileDialog_Config config = IGFD_FileDialog_Config_Get();
+                
+                config.flags = ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_DisableCreateDirectoryButton;
+                IGFD_OpenDialog(ig_fd, "ChooseFileDlgKey", "Open file", "((.*))", config);
             }
             if (igMenuItem_Bool("Edit", "", false, true)) show_map_meta_edit = true;
             if (igMenuItem_Bool("Export map", "Ctrl+S", false, true)) ExportMap();
@@ -256,6 +249,23 @@ void DrawMapMetaEditor(Map* map) {
 
         } igEnd();
 
+    }
+}
+
+void DrawFileDialog(void) {
+    if (ig_fd == NULL) return;
+    if (IGFD_DisplayDialog(ig_fd, "ChooseFileDlgKey", 0, (ImVec2){200.0f, 200.0f}, (ImVec2){900.0f, 900.0f})) {
+        if (IGFD_IsOk(ig_fd)) {
+            char* file_path_name = IGFD_GetFilePathName(ig_fd, IGFD_ResultMode_KeepInputFile);
+
+            if (file_path_name != NULL) {
+                TraceLog(LOG_DEBUG, "Picked map file in DrawFileDialog() ; File: %s", file_path_name);
+                ImportMap(file_path_name);
+                FREE(file_path_name);
+            }
+        }
+
+        IGFD_CloseDialog(ig_fd);
     }
 }
 
@@ -380,6 +390,7 @@ void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, Map
         DrawObjectContextMenu(selected_objects, num_selected_objects);
         DrawMapMetaEditor(map);
         DrawContextMenu();
+        DrawFileDialog();
         igPopFont();
     } EndGUIDraw();
 }
