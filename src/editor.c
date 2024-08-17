@@ -192,7 +192,7 @@ void CreatePrimitive(Object new_obj) {
         }
 
         MALLOC(new_obj.label, sizeof(char) * LABEL_DATA_MEMORY_RESERVE);
-        strncpy(new_obj.label, "NONE", LABEL_DATA_MEMORY_RESERVE);
+        strncpy(new_obj.label, DEFAULT_OBJECT_LABEL, LABEL_DATA_MEMORY_RESERVE);
 
         map.objects[map.num_objects] = new_obj;
         map.num_objects++;

@@ -40,4 +40,6 @@
 #define DEFAULT_MAP_NAME "new_map"
 #define DEFAULT_MAP_AUTHOR "unspecified"
 
+#define DEFAULT_OBJECT_LABEL "NONE"
+
 #endif /* CONFIG_H */
