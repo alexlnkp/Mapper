@@ -309,8 +309,7 @@ void DrawObjects(void) {
 
         switch (cur_obj.type) {
         case OT_Cube: {
-            Vector3 _dim = cur_obj.data.Cube.dim;
-            DrawCube(cur_obj.pos, _dim.x, _dim.y, _dim.z, cur_obj.col);
+            DrawCubeV(cur_obj.pos, cur_obj.data.Cube.dim, cur_obj.col);
         } break;
 
         case OT_Sphere: {
@@ -330,8 +329,7 @@ void DrawSelectedObjects(void) {
 
             switch (cur_obj->type) {
             case OT_Cube: {
-                Vector3 _dim = cur_obj->data.Cube.dim;
-                DrawCube(cur_obj->pos, _dim.x, _dim.y, _dim.z, BLACK);
+                DrawCubeV(cur_obj->pos, cur_obj->data.Cube.dim, BLACK);
             } break;
 
             case OT_Sphere: {
