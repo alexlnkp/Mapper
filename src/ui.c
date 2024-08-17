@@ -20,7 +20,7 @@ bool show_map_meta_edit;
 /* returns a pointer to an !ALLOCATED STRING! handling it is your responsibility */
 char* OpenFile(void) {
     nfdchar_t *out_path = NULL;
-    nfdresult_t res = NFD_OpenDialog( NULL, "/kirby/Coding/3deditor", &out_path );
+    nfdresult_t res = NFD_OpenDialog( NULL, NULL, &out_path );
     return out_path;
 }
 
