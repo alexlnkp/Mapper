@@ -209,7 +209,7 @@ void ImportMap(char* file) {
     FILE *fp = fopen(file, "rb");
     assert(fp != NULL);
 
-    TraceLog(LOG_INFO, "Reading file lol");
+    TraceLog(LOG_DEBUG, "Reading file in ImportMap() function. File: %s", file);
 
     fread(&map.num_objects, sizeof(ObjectCounter), 1, fp);
 

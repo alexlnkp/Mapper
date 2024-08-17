@@ -197,7 +197,7 @@ void DrawContextMenu(void) {
             if (igMenuItem_Bool("Open", "", false, true)) {
                 char* map_file = OpenFile();
                 if (map_file != NULL) {
-                    TraceLog(LOG_INFO, "Picked map file");
+                    TraceLog(LOG_DEBUG, "Picked map file in DrawContextMenu() ; File: %s", map_file);
                     ImportMap(map_file);
                     FREE(map_file);
                 }
