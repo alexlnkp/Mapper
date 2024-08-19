@@ -18,7 +18,18 @@ ImGuiFileDialog* ig_fd;
 
 bool show_map_meta_edit;
 
-void SetupImGuiStyle(void) {
+void StringEdit(char* buf, char** dest, unsigned mem_reserve) {
+    unsigned new_len_dest = strlen(buf) + 1;
+    if (new_len_dest % mem_reserve == 0) {
+        new_len_dest += mem_reserve;
+        REALLOC(*dest, sizeof(char) * new_len_dest);
+        TraceLog(LOG_DEBUG, "Realloc'd for '%s'", dest);
+    }
+
+    strncpy(*dest, buf, new_len_dest);
+}
+
+void SetupGUIStyle(void) {
 	/* Fork of Future Dark style from ImThemes */
 	ImGuiStyle* style = igGetStyle();
 	
@@ -185,7 +196,7 @@ void EndGUIDraw(void) {
     ImGui_ImplRaylib_RenderDrawData(igGetDrawData());
 }
 
-void DrawContextMenu(void) {
+void DrawMenuBar(void) {
     if (igBeginMenuBar()) {
         if (igBeginMenu("File", true)) {
             if (igMenuItem_Bool("Open", "", false, true)) {
@@ -226,25 +237,11 @@ void DrawMapMetaEditor(Map* map) {
 
         bool show = (igBegin("Edit map metadata", &show_map_meta_edit, wf)); {
             if (igInputText("Map name", buf_name, MAP_META_FIELD_MAX_SIZE, 0, 0, NULL)) {
-                unsigned new_len_name = strlen(buf_name) + 1;
-                if (new_len_name % MAP_META_FIELD_MEMORY_RESERVE == 0) {
-                    new_len_name += MAP_META_FIELD_MEMORY_RESERVE;
-                    REALLOC(map->meta.name, sizeof(char) * new_len_name);
-                    TraceLog(LOG_DEBUG, "Realloc'd for name of MapMetadata");
-                }
-
-                strncpy(map->meta.name, buf_name, new_len_name);
+                StringEdit(buf_name, &map->meta.name, MAP_META_FIELD_MEMORY_RESERVE);
             }
 
             if (igInputText("Map author", buf_author, MAP_META_FIELD_MAX_SIZE, 0, 0, NULL)) {
-                unsigned new_len_author = strlen(buf_author) + 1;
-                if (new_len_author % MAP_META_FIELD_MEMORY_RESERVE == 0) {
-                    new_len_author += MAP_META_FIELD_MEMORY_RESERVE;
-                    REALLOC(map->meta.author, sizeof(char) * new_len_author);
-                    TraceLog(LOG_DEBUG, "Realloc'd for author of MapMetadata");
-                }
-
-                strncpy(map->meta.author, buf_author, new_len_author);
+                StringEdit(buf_author, &map->meta.author, MAP_META_FIELD_MEMORY_RESERVE);
             }
 
         } igEnd();
@@ -330,14 +327,7 @@ void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selecte
                     strncpy(buf, selected_objects[cur_obj_idx]->label, LABEL_DATA_MAX_SIZE);
 
                 if (igInputText("Label", buf, LABEL_DATA_MAX_SIZE, 0, 0, NULL)) {
-                    unsigned new_len = strlen(buf) + 1;
-                    if (new_len % LABEL_DATA_MEMORY_RESERVE == 0) {
-                        new_len += LABEL_DATA_MEMORY_RESERVE;
-                        REALLOC(selected_objects[cur_obj_idx]->label, sizeof(char) * new_len);
-                        TraceLog(LOG_DEBUG, "Realloc'd for label of selected_objects[cur_obj_idx]");
-                    }
-
-                    strncpy(selected_objects[cur_obj_idx]->label, buf, new_len);
+                    StringEdit(buf, &selected_objects[cur_obj_idx]->label, LABEL_DATA_MEMORY_RESERVE);
                 }
 
                 int current_obj_type = selected_objects[cur_obj_idx]->type;
@@ -389,7 +379,7 @@ void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, Map
         DrawObjectListPanel(selected_objects, num_selected_objects, map->num_objects, map->objects);
         DrawObjectContextMenu(selected_objects, num_selected_objects);
         DrawMapMetaEditor(map);
-        DrawContextMenu();
+        DrawMenuBar();
         DrawFileDialog();
         igPopFont();
     } EndGUIDraw();
@@ -421,7 +411,7 @@ void InitGUI(void) {
 
     rligSetupFontAwesome();
 
-    SetupImGuiStyle();
+    SetupGUIStyle();
 
     show_map_meta_edit = false;
 
