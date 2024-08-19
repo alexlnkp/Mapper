@@ -275,12 +275,14 @@ void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_
     bool show = (igBegin("Objects", NULL, windowFlags)); {
         for (ObjectCounter i = 0; i < num_objects; ++i) {
             bool active = false;
-            for (ObjectCounter j = 0; j <= *num_selected_objects && *num_selected_objects != (ObjectCounter)-1; ++j) {
-                active = (selected_objects[j] == &objects[i]);
+            ObjectCounter cur_selected_obj;
+            for (cur_selected_obj = 0; cur_selected_obj <= *num_selected_objects && *num_selected_objects != (ObjectCounter)-1; ++cur_selected_obj) {
+                active = (selected_objects[cur_selected_obj] == &objects[i]);
                 if (active) break;
             }
             if (igCheckbox(TextFormat("%d: %s", i, obj_types[objects[i].type]), &active)) {
-                SelectObjectAtIndex(i);
+                if (!active) { DeSelectObjectAtIndex(cur_selected_obj); }
+                else { SelectObjectAtIndex(i); }
             }
         }
     } igEnd();

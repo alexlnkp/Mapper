@@ -77,6 +77,7 @@ void ResizeObjectSelection(void);
 void CameraUpdate(void);
 
 void SelectObjectAtIndex(ObjectCounter idx);
+void DeSelectObjectAtIndex(ObjectCounter idx);
 
 #ifdef __cplusplus
 }

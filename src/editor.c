@@ -465,6 +465,19 @@ void SelectObjectAtIndex(ObjectCounter idx) {
     }
 }
 
+void DeSelectObjectAtIndex(ObjectCounter idx) {
+    if (idx == (ObjectCounter)-1 || idx > num_selected_objects || num_selected_objects == (ObjectCounter)-1) return;
+
+    selected_objects[idx] = NULL;
+
+    for (ObjectCounter i = idx; i < num_selected_objects; ++i) {
+        selected_objects[i] = selected_objects[i + 1];
+    }
+    num_selected_objects--;
+
+    ResizeObjectSelection();
+}
+
 /*                                  Dispatchers                                  */
 void HandleEvents(void) {
     HandleResolutionChange();
