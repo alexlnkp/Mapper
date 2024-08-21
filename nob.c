@@ -47,10 +47,6 @@ int main(int argc, const char** argv) {
 #define LFLAGS_DBG "-L" LIBDIR, "-lraylib", "-l:cimgui.so", "-lm", "-Wl,-R" LIBDIR
 #define SFLAGS_DBG SRCDIR "editor.c", SRCDIR "ui.c", VENDIR "rlcimgui.c"
 
-    /*Running:
-    gcc src/editor.c src/ui.c vendor/rlcimgui.c -Wall -Wextra -O3 -std=c99 -flto -l:cimgui.so -lraylib -lm -Ivendor/include -Lvendor/lib -Wl,-Rvendor/lib -Wno-unused-variable -Wno-unused-parameter -Wl,--gc-sections -ffunction-sections -fdata-sections -o bin/editor
-    */
-
     struct argparse_option options[] = {
         OPT_HELP(),
         OPT_BOOLEAN('d', "debug", &debug, "build in debug", NULL, 0, 0),
