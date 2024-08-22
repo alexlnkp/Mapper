@@ -7,8 +7,6 @@
 extern "C" {
 #endif
 
-char* OpenFile(void);
-
 void InitGUI(void);
 void DeInitGUI(void);
 
