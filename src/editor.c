@@ -565,7 +565,14 @@ void HandleEvents(void) {
             }
         }
 
-        if (IsKeyDown(KEY_LEFT_CONTROL) & IsKeyPressed(KEY_S)) ExportMap();
+        if (IsKeyDown(KEY_LEFT_CONTROL)) {
+            if (IsKeyPressed(KEY_S)) ExportMap();
+        }
+
+        if (IsKeyDown(KEY_LEFT_SHIFT)) {
+            if (IsKeyPressed(KEY_C)) CreateCube();
+            if (IsKeyPressed(KEY_S)) CreateSphere();
+        }
 
     } break;
 
