@@ -1,0 +1,7 @@
+/** TODO (in order of priority)
+ * make it possible to load models and meshes (will need a new ObjectType for this too)
+ * look into the issue where creating more than like 12 objects and then selecting one causes a segfault(possibly doesn't exist anymore? not sure)
+ * do heavy valgrinding to fixup all the leaks if there are any
+ * make it possible to load textures for objects (or at least create a new field for texture name so that they can be loaded by the user afterwards)
+ * test out the official raylib's example 2d outline shader for object outline, since we're dealing with a render texture now.
+ */
