@@ -80,54 +80,28 @@ if [[ ! -f "${_RUN_DIR}/${_VENDOR_DIR}/lib/libraylib.so" ]]; then
     cd raylib && git fetch
     git checkout ae50bfa2cc569c0f8d5bc4315d39db64005b1b08 # tag 5.0
 
-    if [[ $1 = "-g" ]]; then
-        cmake \
-            -B build \
-            -D BUILD_EXAMPLES=OFF \
-            -D BUILD_SHARED_LIBS=ON \
-            -D CMAKE_BUILD_TYPE=Release \
-            -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
-            -D CMAKE_INSTALL_LIBDIR=lib \
-            -D CMAKE_INSTALL_PREFIX=/usr \
-            -D OpenGL_GL_PREFERENCE=GLVND \
-            -D PLATFORM=Desktop \
-            -D USE_EXTERNAL_GLFW=OFF \
-            -D WITH_PIC=ON \
-            -G Ninja \
-            -W no-dev
-    else
-        cmake \
-            -B build \
-            -D BUILD_EXAMPLES=OFF \
-            -D BUILD_SHARED_LIBS=ON \
-            -D CMAKE_BUILD_TYPE=Release \
-            -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
-            -D CMAKE_INSTALL_LIBDIR=lib \
-            -D CMAKE_INSTALL_PREFIX="${_RUN_DIR}/${_VENDOR_DIR}" \
-            -D OpenGL_GL_PREFERENCE=GLVND \
-            -D PLATFORM=Desktop \
-            -D USE_EXTERNAL_GLFW=OFF \
-            -D WITH_PIC=ON \
-            -G Ninja \
-            -W no-dev
-    fi
+    cmake \
+        -B build \
+        -D BUILD_EXAMPLES=OFF \
+        -D BUILD_SHARED_LIBS=ON \
+        -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
+        -D CMAKE_INSTALL_LIBDIR=lib \
+        -D CMAKE_INSTALL_PREFIX="${_RUN_DIR}/${_VENDOR_DIR}" \
+        -D OpenGL_GL_PREFERENCE=GLVND \
+        -D PLATFORM=Desktop \
+        -D USE_EXTERNAL_GLFW=OFF \
+        -D WITH_PIC=ON \
+        -G Ninja \
+        -W no-dev
 
     ninja -C build
 
-    if [[ $1 = "-g" ]]; then
-        sudo ninja -C build install
-        for f in rcamera rgestures; do
-            sudo install -Dm644 src/$f.h "/usr/include/$f.h"
-        done
-
-        sudo install -Dm644 LICENSE "/usr/share/licenses/raylib/LICENSE"
-    else
-        ninja -C build install
-        for f in rcamera rgestures; do
-            install -Dm644 src/$f.h "${_RUN_DIR}/${_VENDOR_DIR}/include/$f.h"
-        done
-        install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/raylib/LICENSE"
-    fi
+    ninja -C build install
+    for f in rcamera rgestures; do
+        install -Dm644 src/$f.h "${_RUN_DIR}/${_VENDOR_DIR}/include/$f.h"
+    done
+    install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/raylib/LICENSE"
 fi
 #################################################################
 
@@ -146,51 +120,28 @@ if [[ ! -f "${_RUN_DIR}/${_VENDOR_DIR}/lib/cimgui.so" ]]; then
     git am --keep-cr --signoff < ${_RUN_DIR}/${_VENDOR_DIR}/etc/0001-fix-cstdint-not-found-error-in-C-API.patch
     cd ..
 
-    if [[ $1 = "-g" ]]; then
-        cmake                                      \
-            -B build                               \
-            -D IMGUI_STATIC=OFF                    \
-            -D CMAKE_BUILD_TYPE=Release            \
-            -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w"    \
-            -D CMAKE_INSTALL_PREFIX=/usr/local/lib \
-            -G Ninja                               \
-            -W no-dev
-    else
-        cmake                                      \
-            -B build                               \
-            -D IMGUI_STATIC=OFF                    \
-            -D CMAKE_BUILD_TYPE=Release            \
-            -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w"    \
-            -D CMAKE_INSTALL_PREFIX="${_RUN_DIR}/${_VENDOR_DIR}/lib" \
-            -G Ninja                               \
-            -W no-dev
-    fi
+    cmake                                      \
+        -B build                               \
+        -D IMGUI_STATIC=OFF                    \
+        -D CMAKE_BUILD_TYPE=Release            \
+        -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w"    \
+        -D CMAKE_INSTALL_PREFIX="${_RUN_DIR}/${_VENDOR_DIR}/lib" \
+        -G Ninja                               \
+        -W no-dev
 
     ninja -C build
 
-    if [[ $1 = "-g" ]]; then
-        sudo ninja -C build install
-        sudo install -Dm644 LICENSE "/usr/share/licenses/cimgui/LICENSE"
-    else
-        ninja -C build install
-        install -Dm644 cimgui.h "${_RUN_DIR}/${_VENDOR_DIR}/include/cimgui.h"
-        install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/cimgui/LICENSE"
+    ninja -C build install
+    install -Dm644 cimgui.h "${_RUN_DIR}/${_VENDOR_DIR}/include/cimgui.h"
+    install -Dm644 LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/cimgui/LICENSE"
 
-        install -Dm644 ImGuiFileDialog/ImGuiFileDialog.h "${_RUN_DIR}/${_VENDOR_DIR}/include/ImGuiFileDialog.h"
-        install -Dm644 ImGuiFileDialog/ImGuiFileDialogConfig.h "${_RUN_DIR}/${_VENDOR_DIR}/include/ImGuiFileDialogConfig.h"
-        install -Dm644 ImGuiFileDialog/LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/ImGuiFileDialog/LICENSE"
-    fi
+    install -Dm644 ImGuiFileDialog/ImGuiFileDialog.h "${_RUN_DIR}/${_VENDOR_DIR}/include/ImGuiFileDialog.h"
+    install -Dm644 ImGuiFileDialog/ImGuiFileDialogConfig.h "${_RUN_DIR}/${_VENDOR_DIR}/include/ImGuiFileDialogConfig.h"
+    install -Dm644 ImGuiFileDialog/LICENSE "${_RUN_DIR}/${_VENDOR_DIR}/licenses/ImGuiFileDialog/LICENSE"
 fi
 #################################################################
 
 cd ${_RUN_DIR}
-
-###### Registering a library on our system so that it can (HOPEFULLY) be found #####
-if [[ $1 = "-g" ]]; then
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
-    sudo ldconfig
-fi
-####################################################################################
 
 echo "Current dir: $PWD"
 echo "Prompting for recursive removal of ${_RUN_DIR}/${TMP_FOLDER} folder"
