@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <ctype.h>
 #include <string.h>
 
 #include "editor.h"
@@ -13,11 +12,6 @@
 #include "ui.h"
 
 #include "funkymacros.h"
-
-ImFont* main_font;
-ImGuiFileDialog* ig_fd;
-
-bool show_map_meta_edit;
 
 void StringEdit(char* buf, char** dest, unsigned mem_reserve) {
     unsigned new_len_dest = strlen(buf) + 1;
@@ -201,13 +195,13 @@ void DrawMenuBar(AppContext** app_ctx) {
     if (igBeginMenuBar()) {
         if (igBeginMenu("File", true)) {
             if (igMenuItem_Bool("Open", "", false, true)) {
-                ig_fd = IGFD_Create();
+                (*app_ctx)->gui_ctx->ig_fd = IGFD_Create();
                 struct IGFD_FileDialog_Config config = IGFD_FileDialog_Config_Get();
 
                 config.flags = ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_DisableCreateDirectoryButton;
-                IGFD_OpenDialog(ig_fd, "ChooseFileDlgKey", "Open file", "((.*))", config);
+                IGFD_OpenDialog((*app_ctx)->gui_ctx->ig_fd, "ChooseFileDlgKey", "Open file", "((.*))", config);
             }
-            if (igMenuItem_Bool("Edit", "", false, true)) show_map_meta_edit = true;
+            if (igMenuItem_Bool("Edit", "", false, true)) (*app_ctx)->gui_ctx->show_map_meta_edit = true;
             if (igMenuItem_Bool("Export map", "Ctrl+S", false, true)) ExportMap((*app_ctx)->m_ctx);
             if (igMenuItem_Bool("Exit", "Esc", false, true)) AskToLeave(app_ctx);
 
@@ -224,8 +218,8 @@ void DrawMenuBar(AppContext** app_ctx) {
     }
 }
 
-void DrawMapMetaEditor(Map* map) {
-    if (show_map_meta_edit) {
+void DrawMapMetaEditor(GUIContext* gui_ctx, Map* map) {
+    if (gui_ctx->show_map_meta_edit) {
         static char buf_name[MAP_META_FIELD_MAX_SIZE];
         if (strcmp(buf_name, map->meta.name) != 0)
             strncpy(buf_name, map->meta.name, MAP_META_FIELD_MAX_SIZE);
@@ -236,7 +230,7 @@ void DrawMapMetaEditor(Map* map) {
 
         ImGuiWindowFlags wf = ImGuiWindowFlags_Popup | ImGuiWindowFlags_AlwaysAutoResize;
 
-        bool show = (igBegin("Edit map metadata", &show_map_meta_edit, wf)); {
+        bool show = (igBegin("Edit map metadata", &gui_ctx->show_map_meta_edit, wf)); {
             if (igInputText("Map name", buf_name, MAP_META_FIELD_MAX_SIZE, 0, 0, NULL)) {
                 StringEdit(buf_name, &map->meta.name, MAP_META_FIELD_MEMORY_RESERVE);
             }
@@ -250,11 +244,11 @@ void DrawMapMetaEditor(Map* map) {
     }
 }
 
-void DrawFileDialog(MapContext* m_ctx) {
-    if (ig_fd == NULL) return;
-    if (IGFD_DisplayDialog(ig_fd, "ChooseFileDlgKey", 0, (ImVec2){200.0f, 200.0f}, (ImVec2){900.0f, 900.0f})) {
-        if (IGFD_IsOk(ig_fd)) {
-            char* file_path_name = IGFD_GetFilePathName(ig_fd, IGFD_ResultMode_KeepInputFile);
+void DrawFileDialog(MapContext* m_ctx, GUIContext* gui_ctx) {
+    if (gui_ctx->ig_fd == NULL) return;
+    if (IGFD_DisplayDialog(gui_ctx->ig_fd, "ChooseFileDlgKey", 0, (ImVec2){200.0f, 200.0f}, (ImVec2){900.0f, 900.0f})) {
+        if (IGFD_IsOk(gui_ctx->ig_fd)) {
+            char* file_path_name = IGFD_GetFilePathName(gui_ctx->ig_fd, IGFD_ResultMode_KeepInputFile);
 
             if (file_path_name != NULL) {
                 TraceLog(LOG_DEBUG, "Picked map file in DrawFileDialog() ; File: %s", file_path_name);
@@ -263,7 +257,7 @@ void DrawFileDialog(MapContext* m_ctx) {
             }
         }
 
-        IGFD_CloseDialog(ig_fd);
+        IGFD_CloseDialog(gui_ctx->ig_fd);
     }
 }
 
@@ -377,18 +371,18 @@ void DrawObjectContextMenu(MapContext* m_ctx) {
 
 void DrawGUI(AppContext* app_ctx) {
     BeginGUIDraw(); {
-        igPushFont(main_font);
+        igPushFont(app_ctx->gui_ctx->main_font);
         MakeDockSpace();
         DrawObjectListPanel(app_ctx->m_ctx);
         DrawObjectContextMenu(app_ctx->m_ctx);
-        DrawMapMetaEditor(&app_ctx->m_ctx->map);
+        DrawMapMetaEditor(app_ctx->gui_ctx, &app_ctx->m_ctx->map);
         DrawMenuBar(&app_ctx); /* maybe we need to pass AppContext** in the DrawGUI instead for pointer modification? */
-        DrawFileDialog(app_ctx->m_ctx);
+        DrawFileDialog(app_ctx->m_ctx, app_ctx->gui_ctx);
         igPopFont();
     } EndGUIDraw();
 }
 
-void InitGUI(void) {
+GUIContext* InitGUI(void) {
     rligSetup(true);
 
     igCreateContext(NULL);
@@ -410,16 +404,19 @@ void InitGUI(void) {
 
     const ImWchar* glyph_ranges = font_cfg->GlyphRanges != NULL ? font_cfg->GlyphRanges : ImFontAtlas_GetGlyphRangesDefault(ioptr->Fonts);
 
-    main_font = ImFontAtlas_AddFontFromFileTTF(ioptr->Fonts, "res/0xProtoNerdFont-Regular.ttf", font_cfg->SizePixels, font_cfg, glyph_ranges);
+    GUIContext* gui_ctx = MALLOCFUNC(sizeof(GUIContext));
+    gui_ctx->main_font = ImFontAtlas_AddFontFromFileTTF(ioptr->Fonts, "res/0xProtoNerdFont-Regular.ttf", font_cfg->SizePixels, font_cfg, glyph_ranges);
 
     rligSetupFontAwesome();
 
     SetupGUIStyle();
 
-    show_map_meta_edit = false;
+    gui_ctx->show_map_meta_edit = false;
 
     /* required to be called to cache the font texture with raylib */
     ImGui_ImplRaylib_BuildFontAtlas();
+
+    return gui_ctx;
 }
 
 void DeInitGUI(void) { ImGui_ImplRaylib_Shutdown(); igDestroyContext(NULL); }

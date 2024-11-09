@@ -156,7 +156,7 @@ AppContext* InitGlobal(void) {
     app_ctx->e_ctx->default_line_width = rlGetLineWidth();
     ShadersInit(app_ctx->e_ctx, app_ctx->r_ctx);
 
-    InitGUI();
+    app_ctx->gui_ctx = InitGUI();
     return app_ctx;
 }
 

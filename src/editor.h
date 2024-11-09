@@ -1,6 +1,7 @@
 #ifndef   EDITOR_H
 #define   EDITOR_H
 
+#include "ui.h"
 #include <raylib.h>
 
 #ifdef __cplusplus
@@ -87,12 +88,13 @@ typedef struct {
     int sizeLoc;
 } RenderContext;
 
-typedef struct {
+struct AppContext {
     CameraContext* c_ctx;
     EditorContext* e_ctx;
     MapContext* m_ctx;
     RenderContext* r_ctx;
-} AppContext;
+    GUIContext* gui_ctx;
+};
 
 void AskToLeave(AppContext** app_ctx);
 
