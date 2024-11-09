@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "editor.h"
 #include "imgui_impl_raylib.h"
 #include "rlcimgui.h"
 #include <cimgui.h>
@@ -32,7 +33,7 @@ void StringEdit(char* buf, char** dest, unsigned mem_reserve) {
 void SetupGUIStyle(void) {
 	/* Fork of Future Dark style from ImThemes */
 	ImGuiStyle* style = igGetStyle();
-	
+
 	style->Alpha = 1.0f;
 	style->DisabledAlpha = 0.6000000238418579f;
 	style->WindowPadding = (ImVec2){12.0f, 12.0f};
@@ -63,7 +64,7 @@ void SetupGUIStyle(void) {
 	style->ColorButtonPosition = ImGuiDir_Right;
 	style->ButtonTextAlign = (ImVec2){0.5f, 0.5f};
 	style->SelectableTextAlign = (ImVec2){0.0f, 0.0f};
-	
+
 	style->Colors[ImGuiCol_Text] = (ImVec4){1.0f, 1.0f, 1.0f, 1.0f};
 	style->Colors[ImGuiCol_TextDisabled] = (ImVec4){0.2745098173618317f, 0.3176470696926117f, 0.4509803950786591f, 1.0f};
 	style->Colors[ImGuiCol_WindowBg] = (ImVec4){0.0784313753247261f, 0.08627451211214066f, 0.1019607856869698f, 1.0f};
@@ -157,9 +158,9 @@ void MakeDockSpace(void) {
         window_flags |= ImGuiWindowFlags_NoBackground;
 
     // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
-    // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive, 
+    // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
     // all active windows docked into it will lose their parent and become undocked.
-    // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise 
+    // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
     // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
     igPushStyleVar_Vec2(ImGuiStyleVar_WindowPadding, (ImVec2){0.0f, 0.0f});
     igBegin("DockSpace", NULL, window_flags);
@@ -196,25 +197,25 @@ void EndGUIDraw(void) {
     ImGui_ImplRaylib_RenderDrawData(igGetDrawData());
 }
 
-void DrawMenuBar(void) {
+void DrawMenuBar(AppContext** app_ctx) {
     if (igBeginMenuBar()) {
         if (igBeginMenu("File", true)) {
             if (igMenuItem_Bool("Open", "", false, true)) {
                 ig_fd = IGFD_Create();
                 struct IGFD_FileDialog_Config config = IGFD_FileDialog_Config_Get();
-                
+
                 config.flags = ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_DisableCreateDirectoryButton;
                 IGFD_OpenDialog(ig_fd, "ChooseFileDlgKey", "Open file", "((.*))", config);
             }
             if (igMenuItem_Bool("Edit", "", false, true)) show_map_meta_edit = true;
-            if (igMenuItem_Bool("Export map", "Ctrl+S", false, true)) ExportMap();
-            if (igMenuItem_Bool("Exit", "Esc", false, true)) AskToLeave();
-            
+            if (igMenuItem_Bool("Export map", "Ctrl+S", false, true)) ExportMap((*app_ctx)->m_ctx);
+            if (igMenuItem_Bool("Exit", "Esc", false, true)) AskToLeave(app_ctx);
+
             igEndMenu();
         }
         if (igBeginMenu("Create", true)) {
-            if (igMenuItem_Bool("Cube", "Shift+C", false, true)) CreateCube();
-            if (igMenuItem_Bool("Sphere", "Shift+P", false, true)) CreateSphere();
+            if (igMenuItem_Bool("Cube", "Shift+C", false, true)) CreateCube((*app_ctx)->m_ctx, (*app_ctx)->c_ctx);
+            if (igMenuItem_Bool("Sphere", "Shift+P", false, true)) CreateSphere((*app_ctx)->m_ctx, (*app_ctx)->c_ctx);
 
             igEndMenu();
         }
@@ -228,7 +229,7 @@ void DrawMapMetaEditor(Map* map) {
         static char buf_name[MAP_META_FIELD_MAX_SIZE];
         if (strcmp(buf_name, map->meta.name) != 0)
             strncpy(buf_name, map->meta.name, MAP_META_FIELD_MAX_SIZE);
-        
+
         static char buf_author[MAP_META_FIELD_MAX_SIZE];
         if (strcmp(buf_author, map->meta.author) != 0)
             strncpy(buf_author, map->meta.author, MAP_META_FIELD_MAX_SIZE);
@@ -249,7 +250,7 @@ void DrawMapMetaEditor(Map* map) {
     }
 }
 
-void DrawFileDialog(void) {
+void DrawFileDialog(MapContext* m_ctx) {
     if (ig_fd == NULL) return;
     if (IGFD_DisplayDialog(ig_fd, "ChooseFileDlgKey", 0, (ImVec2){200.0f, 200.0f}, (ImVec2){900.0f, 900.0f})) {
         if (IGFD_IsOk(ig_fd)) {
@@ -257,7 +258,7 @@ void DrawFileDialog(void) {
 
             if (file_path_name != NULL) {
                 TraceLog(LOG_DEBUG, "Picked map file in DrawFileDialog() ; File: %s", file_path_name);
-                ImportMap(file_path_name);
+                ImportMap(m_ctx, file_path_name);
                 FREE(file_path_name);
             }
         }
@@ -266,100 +267,100 @@ void DrawFileDialog(void) {
     }
 }
 
-void DrawObjectListPanel(Object** selected_objects, ObjectCounter* num_selected_objects, ObjectCounter num_objects, Object* objects) {
+void DrawObjectListPanel(MapContext* m_ctx) {
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse;
 
     /* that's so stupid i literally can't even comprehend why there's no better alternative in the imgui itself */
     igPushStyleColor_U32(ImGuiCol_ResizeGrip, 0);
 
     bool show = (igBegin("Objects", NULL, windowFlags)); {
-        for (ObjectCounter i = 0; i < num_objects; ++i) {
+        for (ObjectCounter i = 0; i < m_ctx->map.num_objects; ++i) {
             bool active = false;
             ObjectCounter cur_selected_obj;
-            for (cur_selected_obj = 0; cur_selected_obj <= *num_selected_objects && *num_selected_objects != (ObjectCounter)-1; ++cur_selected_obj) {
-                active = (selected_objects[cur_selected_obj] == &objects[i]);
+            for (cur_selected_obj = 0; cur_selected_obj <= m_ctx->num_selected_objects && m_ctx->num_selected_objects != (ObjectCounter)-1; ++cur_selected_obj) {
+                active = (m_ctx->selected_objects[cur_selected_obj] == &m_ctx->map.objects[i]);
                 if (active) break;
             }
-            if (igCheckbox(TextFormat("%d: %s", i, obj_types[objects[i].type]), &active)) {
-                if (!active) { DeSelectObjectAtIndex(cur_selected_obj); }
-                else { SelectObjectAtIndex(i); }
+            if (igCheckbox(TextFormat("%d: %s", i, obj_types[m_ctx->map.objects[i].type]), &active)) {
+                if (!active) { DeSelectObjectAtIndex(m_ctx, cur_selected_obj); }
+                else { SelectObjectAtIndex(m_ctx, i); }
             }
         }
     } igEnd();
 }
 
-void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selected_objects) {
+void DrawObjectContextMenu(MapContext* m_ctx) {
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse;
 
     bool show = (igBegin("Properties", NULL, windowFlags)); {
-        if (*num_selected_objects != (ObjectCounter)-1) {
-            if (*num_selected_objects < 1) {
-                ObjectCounter cur_obj_idx = *num_selected_objects;
+        if (m_ctx->num_selected_objects != (ObjectCounter)-1) {
+            if (m_ctx->num_selected_objects < 1) {
+                ObjectCounter cur_obj_idx = m_ctx->num_selected_objects;
 
-                float new_x = selected_objects[cur_obj_idx]->pos.x;
-                float new_y = selected_objects[cur_obj_idx]->pos.y;
-                float new_z = selected_objects[cur_obj_idx]->pos.z;
+                float new_x = m_ctx->selected_objects[cur_obj_idx]->pos.x;
+                float new_y = m_ctx->selected_objects[cur_obj_idx]->pos.y;
+                float new_z = m_ctx->selected_objects[cur_obj_idx]->pos.z;
 
                 igLabelText("", "%s", "Position");
 
                 if (igDragFloat("X", &new_x, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
-                    selected_objects[cur_obj_idx]->pos.x = new_x;
-                
-                if (igDragFloat("Y", &new_y, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
-                    selected_objects[cur_obj_idx]->pos.y = new_y;
-                
-                if (igDragFloat("Z", &new_z, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
-                    selected_objects[cur_obj_idx]->pos.z = new_z;
+                    m_ctx->selected_objects[cur_obj_idx]->pos.x = new_x;
 
-                Color cur_obj_col = selected_objects[cur_obj_idx]->col;
+                if (igDragFloat("Y", &new_y, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
+                    m_ctx->selected_objects[cur_obj_idx]->pos.y = new_y;
+
+                if (igDragFloat("Z", &new_z, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
+                    m_ctx->selected_objects[cur_obj_idx]->pos.z = new_z;
+
+                Color cur_obj_col = m_ctx->selected_objects[cur_obj_idx]->col;
 
                 ImVec4 ig_color = {0};
                 ImU32 color_mould = cur_obj_col.r | (cur_obj_col.g << 8) | (cur_obj_col.b << 16) | (cur_obj_col.a << 24);
                 igColorConvertU32ToFloat4(&ig_color, color_mould);
 
                 float col[4] = {ig_color.x, ig_color.y, ig_color.z, ig_color.w};
-                
+
                 if (igColorEdit4("Color", col, ImGuiColorEditFlags_Uint8)) {
-                    selected_objects[cur_obj_idx]->col = Float4ToRLColor(col);
+                    m_ctx->selected_objects[cur_obj_idx]->col = Float4ToRLColor(col);
                 }
-                
+
                 static char buf[LABEL_DATA_MAX_SIZE];
 
-                if (strcmp(buf, selected_objects[cur_obj_idx]->label) != 0)
-                    strncpy(buf, selected_objects[cur_obj_idx]->label, LABEL_DATA_MAX_SIZE);
+                if (strcmp(buf, m_ctx->selected_objects[cur_obj_idx]->label) != 0)
+                    strncpy(buf, m_ctx->selected_objects[cur_obj_idx]->label, LABEL_DATA_MAX_SIZE);
 
                 if (igInputText("Label", buf, LABEL_DATA_MAX_SIZE, 0, 0, NULL)) {
-                    StringEdit(buf, &selected_objects[cur_obj_idx]->label, LABEL_DATA_MEMORY_RESERVE);
+                    StringEdit(buf, &m_ctx->selected_objects[cur_obj_idx]->label, LABEL_DATA_MEMORY_RESERVE);
                 }
 
-                int current_obj_type = selected_objects[cur_obj_idx]->type;
+                int current_obj_type = m_ctx->selected_objects[cur_obj_idx]->type;
                 if (igCombo_Str_arr("Type", &current_obj_type, obj_types, sizeof(obj_types) / sizeof(obj_types[0]), 0)) {
-                    selected_objects[cur_obj_idx]->type = current_obj_type;
+                    m_ctx->selected_objects[cur_obj_idx]->type = current_obj_type;
                 }
 
                 igLabelText("", "%s", "Type-specific vars");
-                
-                switch (selected_objects[cur_obj_idx]->type) {
+
+                switch (m_ctx->selected_objects[cur_obj_idx]->type) {
                 case OT_Cube: {
-                    float new_dim_x = selected_objects[cur_obj_idx]->data.Cube.dim.x;
-                    float new_dim_y = selected_objects[cur_obj_idx]->data.Cube.dim.y;
-                    float new_dim_z = selected_objects[cur_obj_idx]->data.Cube.dim.z;
+                    float new_dim_x = m_ctx->selected_objects[cur_obj_idx]->data.Cube.dim.x;
+                    float new_dim_y = m_ctx->selected_objects[cur_obj_idx]->data.Cube.dim.y;
+                    float new_dim_z = m_ctx->selected_objects[cur_obj_idx]->data.Cube.dim.z;
 
                     if (igDragFloat("Width", &new_dim_x, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
-                        selected_objects[cur_obj_idx]->data.Cube.dim.x = new_dim_x;
-                    
+                        m_ctx->selected_objects[cur_obj_idx]->data.Cube.dim.x = new_dim_x;
+
                     if (igDragFloat("Height", &new_dim_y, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
-                        selected_objects[cur_obj_idx]->data.Cube.dim.y = new_dim_y;
-                    
+                        m_ctx->selected_objects[cur_obj_idx]->data.Cube.dim.y = new_dim_y;
+
                     if (igDragFloat("Length", &new_dim_z, 0.01f, -GROUND_TOTAL_LENGTH, GROUND_TOTAL_LENGTH, "%f", 0))
-                        selected_objects[cur_obj_idx]->data.Cube.dim.z = new_dim_z;
+                        m_ctx->selected_objects[cur_obj_idx]->data.Cube.dim.z = new_dim_z;
 
                 } break;
 
                 case OT_Sphere: {
-                    float new_radius = selected_objects[cur_obj_idx]->data.Sphere.radius;
+                    float new_radius = m_ctx->selected_objects[cur_obj_idx]->data.Sphere.radius;
                     if (igDragFloat("Radius", &new_radius, 0.01f, 0.0f, GROUND_TOTAL_LENGTH / 2, "%f", 0))
-                        selected_objects[cur_obj_idx]->data.Sphere.radius = new_radius;
+                        m_ctx->selected_objects[cur_obj_idx]->data.Sphere.radius = new_radius;
 
                 } break;
 
@@ -374,15 +375,15 @@ void DrawObjectContextMenu(Object** selected_objects, ObjectCounter* num_selecte
     } igEnd();
 }
 
-void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, Map* map) {
+void DrawGUI(AppContext* app_ctx) {
     BeginGUIDraw(); {
         igPushFont(main_font);
         MakeDockSpace();
-        DrawObjectListPanel(selected_objects, num_selected_objects, map->num_objects, map->objects);
-        DrawObjectContextMenu(selected_objects, num_selected_objects);
-        DrawMapMetaEditor(map);
-        DrawMenuBar();
-        DrawFileDialog();
+        DrawObjectListPanel(app_ctx->m_ctx);
+        DrawObjectContextMenu(app_ctx->m_ctx);
+        DrawMapMetaEditor(&app_ctx->m_ctx->map);
+        DrawMenuBar(&app_ctx); /* maybe we need to pass AppContext** in the DrawGUI instead for pointer modification? */
+        DrawFileDialog(app_ctx->m_ctx);
         igPopFont();
     } EndGUIDraw();
 }

@@ -10,7 +10,7 @@ extern "C" {
 void InitGUI(void);
 void DeInitGUI(void);
 
-void DrawGUI(Object** selected_objects, ObjectCounter* num_selected_objects, Map* map);
+void DrawGUI(AppContext* app_ctx);
 
 bool IsInteractingWithGUI(void);
 

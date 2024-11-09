@@ -1,6 +1,8 @@
 #ifndef   EDITOR_H
 #define   EDITOR_H
 
+#include <raylib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,27 +59,62 @@ typedef struct Map {
     MapMetadata meta;
 } Map;
 
-void AskToLeave(void);
+typedef struct {
+    Camera* cam;
+    CameraState cam_state;
+    float cam_speed;
+} CameraContext;
 
-void InitGlobal(void);
-void DeInitGlobal(void);
+typedef struct {
+    BoundingBox ground;
+    Map map;
 
-void HandleEvents(void);
-void Update(void);
-void Draw(void);
+    Object** selected_objects; /* Holds the addresses to the selected objects in the map.objects array */
+    ObjectCounter num_selected_objects; /* (ObjectCounter)-1 means no object selected, 0 means one is selected */
+} MapContext;
 
-void CreateSphere(void);
-void CreateCube(void);
+typedef struct {
+    bool cursor_disabled;
+    ObjectMoveState move_state;
+    float default_line_width;
+    int screen_w; /* current screen width */
+    int screen_h; /* current screen height */
+} EditorContext;
 
-void ExportMap(void);
-void ImportMap(char* file);
+typedef struct {
+    RenderTexture renderTexture;
+    Shader outline_shader;
+    int sizeLoc;
+} RenderContext;
 
-void ResizeObjectSelection(void);
+typedef struct {
+    CameraContext* c_ctx;
+    EditorContext* e_ctx;
+    MapContext* m_ctx;
+    RenderContext* r_ctx;
+} AppContext;
 
-void CameraUpdate(void);
+void AskToLeave(AppContext** app_ctx);
 
-void SelectObjectAtIndex(ObjectCounter idx);
-void DeSelectObjectAtIndex(ObjectCounter idx);
+AppContext* InitGlobal(void);
+void DeInitGlobal(AppContext** app_ctx);
+
+void HandleEvents(AppContext* app_ctx);
+void Update(CameraContext* c_ctx);
+void Draw(AppContext* app_ctx);
+
+void CreateSphere(MapContext* m_ctx, CameraContext* c_ctx);
+void CreateCube(MapContext* m_ctx, CameraContext* c_ctx);
+
+void ExportMap(MapContext* m_ctx);
+void ImportMap(MapContext* m_ctx, char* file);
+
+void ResizeObjectSelection(MapContext* m_ctx);
+
+void CameraUpdate(CameraContext* c_ctx);
+
+void SelectObjectAtIndex(MapContext* m_ctx, ObjectCounter idx);
+void DeSelectObjectAtIndex(MapContext* m_ctx, ObjectCounter idx);
 
 #ifdef __cplusplus
 }
