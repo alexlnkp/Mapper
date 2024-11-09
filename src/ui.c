@@ -376,7 +376,7 @@ void DrawGUI(AppContext* app_ctx) {
         DrawObjectListPanel(app_ctx->m_ctx);
         DrawObjectContextMenu(app_ctx->m_ctx);
         DrawMapMetaEditor(app_ctx->gui_ctx, &app_ctx->m_ctx->map);
-        DrawMenuBar(&app_ctx); /* maybe we need to pass AppContext** in the DrawGUI instead for pointer modification? */
+        DrawMenuBar(&app_ctx);
         DrawFileDialog(app_ctx->m_ctx, app_ctx->gui_ctx);
         igPopFont();
     } EndGUIDraw();
@@ -419,7 +419,11 @@ GUIContext* InitGUI(void) {
     return gui_ctx;
 }
 
-void DeInitGUI(void) { ImGui_ImplRaylib_Shutdown(); igDestroyContext(NULL); }
+void DeInitGUI(AppContext* app_ctx) {
+    if (app_ctx->gui_ctx != NULL) FREE(app_ctx->gui_ctx);
+    ImGui_ImplRaylib_Shutdown();
+    igDestroyContext(NULL);
+}
 
 /* checks if user is interacting with gui in any way */
 bool IsInteractingWithGUI(void) {

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <raylib.h>
@@ -327,11 +328,13 @@ void DrawSelectedObjects(MapContext* m_ctx) {
 }
 
 void DeInitGlobal(AppContext** app_ctx) {
-    FREE((*app_ctx)->c_ctx->cam);
-    DeInitObjects(&(*app_ctx)->m_ctx);
-    ShadersDeInit(&(*app_ctx)->r_ctx);
-    DeInitGUI();
-    FREE(*app_ctx);
+    if (*app_ctx == NULL) return;
+
+    if ((*app_ctx)->c_ctx->cam != NULL) { FREE((*app_ctx)->c_ctx->cam); (*app_ctx)->c_ctx->cam = NULL; }
+    if ((*app_ctx)->m_ctx != NULL) { DeInitObjects(&(*app_ctx)->m_ctx); (*app_ctx)->m_ctx = NULL; }
+    if ((*app_ctx)->r_ctx != NULL) { ShadersDeInit(&(*app_ctx)->r_ctx); (*app_ctx)->r_ctx = NULL; }
+    DeInitGUI(*app_ctx); (*app_ctx)->gui_ctx = NULL;
+    FREE(*app_ctx); *app_ctx = NULL;
 }
 
 void LockCursor(EditorContext* e_ctx) {
@@ -615,8 +618,8 @@ void Draw(AppContext* app_ctx) {
 /* ----------------------------------------------------------------------------- */
 
 void AskToLeave(AppContext** app_ctx) {
-    DeInitGlobal(app_ctx);
-    CloseWindow();
+    if (*app_ctx != NULL) DeInitGlobal(app_ctx);
+    CloseWindow(); exit(0);
 }
 
 int main(void) {

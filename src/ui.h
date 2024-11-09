@@ -19,7 +19,7 @@ typedef struct {
 } GUIContext;
 
 GUIContext* InitGUI(void);
-void DeInitGUI(void);
+void DeInitGUI(AppContext* app_ctx);
 
 void DrawGUI(AppContext* app_ctx);
 
