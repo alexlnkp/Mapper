@@ -1,13 +1,15 @@
-#define NOBUILD_IMPLEMENTATION
+#define NOB_IMPLEMENTATION
 #include "nob.h"
 
-/* To build, run: `cc -o ./nob nob.c src/argparse.c` */
-
-#include "nob_cfg.h"
+/* To build, run: `cc -o ./nob nob.c vendor/argparse.c` */
 
 #define COMPILER "gcc"
 
 #define C_STD 99
+
+#define VENDIR_NOSLASH "vendor"
+#define BINDIR_NOSLASH "bin"
+#define SRCDIR_NOSLASH "src"
 
 #define VENDIR VENDIR_NOSLASH "/"
 #define BINDIR BINDIR_NOSLASH "/"
@@ -28,8 +30,8 @@ static const char *const usages[] = {
     NULL,
 };
 
-int main(int argc, const char** argv) {
-    GO_REBUILD_URSELF(argc, argv);
+int main(int argc, char** argv) {
+    NOB_GO_REBUILD_URSELF(argc, argv);
 
     int debug = 0;
     int build_examples = 0;
@@ -58,26 +60,41 @@ int main(int argc, const char** argv) {
 
     argparse_init(&argparse, options, usages, 0);
     argparse_describe(&argparse, "\n  nobuild (nob) \n\tbuild stuff", "\nsome more info lol");
-    argc = argparse_parse(&argparse, argc, argv);
+    argc = argparse_parse(&argparse, argc, (const char**)argv);
+
+    Nob_Cmd cc = {0};
+    Nob_Cmd misc = {0};
 
     if (debug != 0) {
         /* building debug!!! */
-        CMD(COMPILER, CFLAGS_DBG, SFLAGS_DBG, IFLAGS_DBG, LFLAGS_DBG, "-o", EDITOR_EXEC);
+        nob_cmd_append(&cc, COMPILER, CFLAGS_DBG, SFLAGS_DBG, IFLAGS_DBG, LFLAGS_DBG, "-o", EDITOR_EXEC);
+        nob_cmd_append(&misc, "true"); /* i've never heard of this command before, but it's hysterical */
     } else {
         /* building NOT debug!!! */
-        CMD(COMPILER, CFLAGS_REL, SFLAGS_REL, IFLAGS_REL, LFLAGS_REL, "-o", EDITOR_EXEC);
-        CMD(STRIP_EVERYTHING, EDITOR_EXEC);
+        nob_cmd_append(&cc, COMPILER, CFLAGS_REL, SFLAGS_REL, IFLAGS_REL, LFLAGS_REL, "-o", EDITOR_EXEC);
+        nob_cmd_append(&misc, STRIP_EVERYTHING, EDITOR_EXEC);
     }
+
+    nob_cmd_run_sync_and_reset(&cc);
+    nob_cmd_run_sync_and_reset(&misc);
 
     if (build_examples != 0) {
-        CMD(COMPILER, CFLAGS_REL, "-Isrc", "examples/readmap.c", "-L" LIBDIR, "-lraylib", "-o", EX_MAPREADER_EXEC);
+        nob_cmd_append(&cc, COMPILER, CFLAGS_REL, "-Isrc");
+        nob_cmd_append(&cc, "examples/readmap.c", "-L" LIBDIR, "-lraylib", "-o", EX_MAPREADER_EXEC);
+        nob_cmd_run_sync_and_reset(&cc);
     }
 
-    CMD("cloc", ".", "--quiet", "--not-match-f=nob_cfg.h", "--not-match-f=nob.h", "--not-match-f=nob.c",
-        "--exclude-dir=" VENDIR_NOSLASH "," BINDIR_NOSLASH "," ".vscode",
-        "--exclude-lang=Bourne Again Shell,INI,Markdown");
+    nob_cmd_append(
+        &misc,
+        "cloc", ".", "--quiet", "--not-match-f=nob_cfg.h", "--not-match-f=nob.h",
+        "--not-match-f=nob.c", "--exclude-dir=" VENDIR_NOSLASH "," BINDIR_NOSLASH "," ".vscode",
+        "--exclude-lang=Bourne Again Shell,INI,Markdown"
+    );
 
-    CMD("wc", "-c", EDITOR_EXEC);
+    nob_cmd_run_sync_and_reset(&misc);
+
+    nob_cmd_append(&misc, "wc", "-c", EDITOR_EXEC);
+    nob_cmd_run_sync_and_reset(&misc);
 
     free(cstd);
     return 0;
