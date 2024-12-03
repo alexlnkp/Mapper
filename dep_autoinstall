@@ -75,10 +75,9 @@ mkdir -p ${TMP_FOLDER}
 ###################### RAYLIB INSTALLATION ######################
 if [[ ! -f "${_RUN_DIR}/${_VENDOR_DIR}/lib/libraylib.so" ]]; then
     cd ${_RUN_DIR}/${TMP_FOLDER}
-    git clone --recursive ${RAYLIB_REPO}
+    git clone --recursive --depth=1 ${RAYLIB_REPO}
 
     cd raylib && git fetch
-    git checkout ae50bfa2cc569c0f8d5bc4315d39db64005b1b08 # tag 5.0
 
     cmake \
         -B build \
@@ -113,11 +112,21 @@ if [[ ! -f "${_RUN_DIR}/${_VENDOR_DIR}/lib/cimgui.so" ]]; then
     git clone --recursive ${CIMGUI_REPO}
 
     cd cimgui
+    git checkout 35a4e8f8932c6395156ffacee288b9c30e50cb63
     git am --keep-cr --signoff < ${_RUN_DIR}/${_VENDOR_DIR}/etc/0001-build-with-ImGuiFileDialog.patch
+
+    cd imgui
+    git checkout 139e99ca37a3e127c87690202faec005cd892d36
+    cd ..
 
     git clone --recursive ${IMGUIFILEDIALOG_REPO}
     cd ImGuiFileDialog
-    git am --keep-cr --signoff < ${_RUN_DIR}/${_VENDOR_DIR}/etc/0001-fix-cstdint-not-found-error-in-C-API.patch
+    git checkout 517a4a8b9c4a4f662f811e1f9f0e976fac546def
+    # git am --keep-cr --signoff < ${_RUN_DIR}/${_VENDOR_DIR}/etc/0001-fix-cstdint-not-found-error-in-C-API.patch
+    cd ..
+
+    cd generator
+    ./generator.sh
     cd ..
 
     cmake                                      \
